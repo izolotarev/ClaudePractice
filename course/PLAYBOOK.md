@@ -1,6 +1,6 @@
 # Claude Code playbook
 
-Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4.
+Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5.
 
 ## Lesson 1: Operate a session safely
 
@@ -82,6 +82,26 @@ Copy this file into any new project. Updated after each lesson. Lessons done: 1,
 - **Redact transcripts** (`course/export-transcripts.mjs` does it): emails become `user@example.com`, profile paths become `USER`. Match emails by pattern, never write the real address in a script.
 - Claude commits, pushes and opens PRs only when asked, and adds a `Co-Authored-By` line to commits.
 - Windows: Git warns "LF will be replaced by CRLF". Harmless.
+
+## Lesson 5: CLAUDE.md and context
+
+**Goal:** give Claude the facts it can't see in the code, and keep its context clean.
+
+**Steps that worked:**
+
+1. `/init` creates `CLAUDE.md`. Then cut it to under 50 lines. Keep only: test, build and run commands (including how to run a single test), architecture that takes several files to see, gotchas, and decisions not visible in code. Delete anything Claude would learn by reading the code (file trees, component lists, generic advice). Verify every command in it by running it.
+2. `/context` shows what is loaded and how much of the window is used.
+3. `/clear` between unrelated tasks. `/compact keep the API decisions` summarizes a long one.
+
+**Reading `/context`:** the fixed overhead (system prompt, tools, skills) is about 10% of a 1M window; MCP tools are "deferred" (loaded by name only). The conversation itself was about 9.5% after a long session, so space is rarely the problem. The reason to `/clear` is quality and cost: old output distracts and is re-sent every turn.
+
+**Gotchas:**
+
+- `CLAUDE.md` loads at session start. One created mid-session will not appear in `/context` until the next `/clear` or restart.
+- After `/compact`, root `CLAUDE.md` is reloaded. Path-scoped rules and nested `CLAUDE.md` files are not, until a matching file is touched again. A rule that must always apply goes in root `CLAUDE.md` or a hook.
+- `CLAUDE.md` is guidance Claude can decide not to follow. Rules with no exceptions belong in deny rules and hooks (lesson 6).
+- Put lessons that cost you time into `CLAUDE.md` (here: the privacy and git rules), so the next session doesn't repeat the mistake.
+- Protected `main`: do `CLAUDE.md` changes on a `docs/` branch and merge with rebase.
 
 ## Todo app stack (reuse as a template)
 
