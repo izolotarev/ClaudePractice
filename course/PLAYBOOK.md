@@ -1,6 +1,6 @@
 # Claude Code playbook
 
-Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3.
+Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4.
 
 ## Lesson 1: Operate a session safely
 
@@ -56,6 +56,32 @@ Copy this file into any new project. Updated after each lesson. Lessons done: 1,
 - Tests that use one row can't catch bugs that depend on several rows, gaps, or order. Vary the data.
 - A bug you wrote yourself is not a fair test of Claude, because it knows where to look. Judge by what it actually ran.
 - The strongest check ladder: prompt (`run tests until they pass`), then `/goal`, then a Stop hook (lesson 6), then CI (lesson 8).
+
+## Lesson 4: Git and GitHub
+
+**Prerequisite:** `gh auth login` (check with `gh auth status`; needs the `repo` scope).
+
+**Steps that worked:**
+
+1. `git init -b main`; `.gitignore` with `node_modules`, `.env`, `data/`, `client/dist`; `git add -A`; check `git status` for anything private before committing.
+2. `gh repo create <name> --private --source . --remote origin --push`.
+3. Branch: `git switch -c chore/short-description`; commit; `git push -u origin <branch>`; `gh pr create --base main --title ... --body ...`.
+4. Branch rule on `main` through the API:
+   `gh api -X PUT repos/<user>/<repo>/branches/main/protection --input -` with `required_pull_request_reviews` (0 approvals for a solo repo), `enforce_admins: true`, `required_status_checks: null`, `restrictions: null`.
+5. Prove it: a direct `git push origin main` must fail with `GH006 ... Changes must be made through a pull request`.
+
+**Branch names:** `type/short-description`: `feat/`, `fix/`, `chore/` (housekeeping), `docs/`. Git doesn't care; it's a label for humans.
+
+**Gotchas:**
+
+- **Branch protection needs a public repo or a paid plan.** A private repo on the free plan returns `403 Upgrade to GitHub Pro or make this repository public`. Run it right after switching visibility; if you get `Repository has been locked`, wait 10-20 seconds and retry.
+- **Making a repo public can't be undone** (caches, search engines). Clean first.
+- **Personal data in history stays in history.** Deleting a file in a new commit doesn't remove it. Check before the first push: `git grep -I -i "<your email>" $(git rev-list --all)`.
+- **Use the GitHub no-reply email for commits:** `git config user.email "<user>@users.noreply.github.com"`.
+- **Cleaning history** (`git filter-branch --env-filter` for emails, `--tree-filter` for file contents, then delete `refs/original`, expire the reflog, `git gc --prune=now`) fixes your local copy only. GitHub keeps old commits reachable through PR refs and by hash, so for a clean result **delete and recreate the remote repo**, then push the cleaned history.
+- **Redact transcripts** (`course/export-transcripts.mjs` does it): emails become `user@example.com`, profile paths become `USER`. Match emails by pattern, never write the real address in a script.
+- Claude commits, pushes and opens PRs only when asked, and adds a `Co-Authored-By` line to commits.
+- Windows: Git warns "LF will be replaced by CRLF". Harmless.
 
 ## Todo app stack (reuse as a template)
 
