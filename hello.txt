@@ -1,0 +1,3 @@
+my first Claude file
+manual mode test
+from shell
