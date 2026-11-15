@@ -104,4 +104,50 @@ describe('API', () => {
     expect((await request(app).get('/api/todos')).body).toEqual([]);
     expect((await request(app).delete('/api/todos/1')).status).toBe(404);
   });
+
+  describe('validation', () => {
+    const seed = async () => {
+      for (const text of ['a', 'b', 'c', 'd']) await request(app).post('/api/todos').send({ text });
+      await request(app).delete('/api/todos/1');
+      await request(app).delete('/api/todos/3');
+    };
+    const remaining = async () => (await request(app).get('/api/todos')).body.map((t) => [t.id, t.text, t.done]);
+
+    it.each(['abc', '1.0', '2.0', '1e0', '2abc', '-2', '0', '%202', '0x2', '99999999999999999999'])(
+      'DELETE and PATCH with malformed id %j return 404 and change nothing',
+      async (id) => {
+        await seed();
+        expect((await request(app).delete(`/api/todos/${id}`)).status).toBe(404);
+        expect((await request(app).patch(`/api/todos/${id}`).send({ done: true })).status).toBe(404);
+        expect(await remaining()).toEqual([
+          [2, 'b', false],
+          [4, 'd', false],
+        ]);
+      },
+    );
+
+    it.each([[{ done: 1 }], [{ done: 'true' }], [{ done: null }], [{}]])('PATCH rejects %j and leaves rows unchanged', async (body) => {
+      await seed();
+      expect((await request(app).patch('/api/todos/4').send(body)).status).toBe(400);
+      expect(await remaining()).toEqual([
+        [2, 'b', false],
+        [4, 'd', false],
+      ]);
+    });
+
+    it.each([[{ text: null }], [{ text: ['a'] }], [{ text: { a: 1 } }], [{ text: true }], [{ text: '\n\t ' }]])(
+      'POST rejects %j and stores nothing',
+      async (body) => {
+        await seed();
+        expect((await request(app).post('/api/todos').send(body)).status).toBe(400);
+        expect(await remaining()).toHaveLength(2);
+      },
+    );
+
+    it('POST rejects a non-object body and trims before measuring length', async () => {
+      expect((await request(app).post('/api/todos').send([])).status).toBe(400);
+      expect((await request(app).post('/api/todos').send({ text: ' ' + 'x'.repeat(200) + ' ' })).status).toBe(201);
+      expect((await request(app).post('/api/todos').send({ text: ' ' + 'x'.repeat(201) + ' ' })).status).toBe(400);
+    });
+  });
 });
