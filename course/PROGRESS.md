@@ -9,6 +9,6 @@
 | 5 | CLAUDE.md and context | done |
 | 6 | Permissions and hooks | done |
 | 7 | Subagents and review | done |
-| 8 | GitHub Actions with Claude | not started |
+| 8 | GitHub Actions with Claude | done |
 | 9 | Deploy | not started |
 | 10 | Headless, cost, wrap-up | not started |
