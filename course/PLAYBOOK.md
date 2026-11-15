@@ -1,6 +1,6 @@
 # Claude Code playbook
 
-Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5.
+Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6.
 
 ## Lesson 1: Operate a session safely
 
@@ -102,6 +102,37 @@ Copy this file into any new project. Updated after each lesson. Lessons done: 1,
 - `CLAUDE.md` is guidance Claude can decide not to follow. Rules with no exceptions belong in deny rules and hooks (lesson 6).
 - Put lessons that cost you time into `CLAUDE.md` (here: the privacy and git rules), so the next session doesn't repeat the mistake.
 - Protected `main`: do `CLAUDE.md` changes on a `docs/` branch and merge with rebase.
+
+## Lesson 6: Permissions and hooks
+
+**Rules vs hooks:** `CLAUDE.md` is guidance Claude can ignore. Deny rules and hooks are enforced by Claude Code. Evaluation order: deny, then ask, then allow; first match wins. An allow can't override a deny, and a hook can't either.
+
+**Config lives in `.claude/settings.json`** (committed, shared). Personal-only rules go in `.claude/settings.local.json`. Changes were picked up immediately, no restart.
+
+**Step 1: deny rule.** `"permissions": { "deny": ["Read(./.env)"] }`. Create a `.env` with a fake value yourself (the rule also blocks Claude from writing it). Both the Read tool and `cat .env` were refused.
+
+**Step 2: PostToolUse hook that runs Prettier.**
+
+- Event `PostToolUse`, matcher `Edit|Write`, command `node "$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs"`.
+- The hook gets a JSON description of the tool call on **stdin** (`tool_input.file_path`). There is no file-path environment variable.
+- The docs' example uses `jq`, which is not installed on Windows by default. A small Node script that reads stdin does the same job with no extra tool. Use `.mjs` so Node reads `import` and top-level `await` without a `package.json` change.
+- Add a `.prettierrc` that matches the existing style (here `singleQuote: true`, `printWidth: 120`), or Prettier rewrites every quote. Add a `.prettierignore` (`node_modules`, `client/dist`, `package-lock.json`, generated transcripts).
+- Limit it to code extensions (`.js .jsx .mjs .json .css`) so notes in Markdown aren't reformatted.
+- Side effect: the first edit to an old file reformats the whole file, which makes the diff noisy. Format everything once in its own commit, or accept it.
+- The VS Code Prettier extension formats your own saves; the hook formats Claude's edits and works without VS Code. They share `.prettierrc`.
+
+**Step 3: Stop hook.** `"Stop"` with command `cd "$CLAUDE_PROJECT_DIR" && npm test 1>&2 || exit 2`. Proof: change one assertion so a test fails, then let Claude finish. Claude Code refused and returned the failing output; Claude fixed it and finished.
+
+**Facts and gotchas:**
+
+- **Exit code 2 blocks. Exit 1 does not**; it only shows an error.
+- The Stop hook gives up after 8 blocked stops in a row.
+- A deny rule matches command text only. It doesn't stop a script that opens the file. For real isolation turn on `/sandbox`.
+- A hook is code that runs with your permissions. Read hooks in a shared repo before trusting them.
+- The Stop hook only checks Claude's turns. It does not cover your own edits, commits or pushes; required CI (lesson 8) does.
+- Each Stop adds the full test time (about 4 seconds here).
+- Check the docs before writing a hook. An assumed environment variable was wrong; the docs showed the stdin JSON instead.
+- On Windows the docs' `jq` examples need Git Bash, or set `"shell": "powershell"`.
 
 ## Todo app stack (reuse as a template)
 
