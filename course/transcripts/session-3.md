@@ -3254,3 +3254,260 @@ The file c:\Repositories\SampleApp\course\export-transcripts.mjs has been update
 
 > **Tool:** Bash {"command":"node course/export-transcripts.mjs \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp\" course/transcripts >/dev/null\necho \"--- loose search in working tree (any escaping), excluding the script's own rule line:\"\ngrep -rIn -o \"user@example.\\{0,12\\}\" course CLAUDE.md .claude 2>/dev/null | cut -c1-160\necho \"--- Igor path: $(grep -rIc 'Users.\\{1,2\\}Igor' course CL
 … [truncated 75 chars]
+
+> Result:
+```
+--- loose search in working tree (any escaping), excluding the script's own rule line:
+--- Igor path: 0 file(s)
+(blank above = clean)
+```
+
+> **Tool:** Bash {"command":"git add -A\necho \"--- staged:\"; git diff --cached --name-only\nleak=$(git diff --cached | grep -i -c \"user@example\\|Users.\\{1,2\\}Igor\"); echo \"--- real-email/path matches (loose pattern): $leak\"\n[ \"$leak\" != \"0\" ] && { echo BLOCKED; exit 1; }\ngit commit -q -F - <<'EOF'\nAdd lesson 6 notes, update CLAUDE.md, refresh transcripts\n\nAlso makes transcript redaction cat
+… [truncated 145 chars]
+
+> Result:
+```
+Exit code 1
+warning: in the working copy of 'course/export-transcripts.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-1.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-2.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-3.md', LF will be replaced by CRLF the next time Git touches it
+--- staged:
+CLAUDE.md
+course/PLAYBOOK.md
+course/PROGRESS.md
+course/export-transcripts.mjs
+course/transcripts/session-3.md
+--- real-email/path matches (loose pattern): 5
+BLOCKED
+```
+
+## Claude
+
+It blocked again. I need to know whether the matches are lines being **added**, which would be bad, or old leaked lines being **removed**, which is the fix.
+
+> **Tool:** Bash {"command":"echo \"added lines matching:   $(git diff --cached | grep '^+' | grep -v '^+++' | grep -i -c 'user@example\\|Users.\\{1,2\\}Igor')\"; echo \"removed lines matching: $(git diff --cached | grep '^-' | grep -v '^---' | grep -i -c 'user@example\\|Users.\\{1,2\\}Igor')\"; echo \"--- any added match:\"; git diff --cached | grep '^+' | grep -v '^+++' | grep -i -o \".\\{0,40\\}\\(i
+… [truncated 71 chars]
+
+> Result:
+```
+added lines matching:   0
+removed lines matching: 5
+--- any added match:
+```
+
+> **Tool:** Bash {"command":"leak=$(git diff --cached | grep '^+' | grep -v '^+++' | grep -i -c \"user@example\\|Users.\\{1,2\\}Igor\"); echo \"added-line matches: $leak\"; [ \"$leak\" != \"0\" ] && { echo BLOCKED; exit 1; }\ngit commit -q -F - <<'EOF'\nAdd lesson 6 notes, update CLAUDE.md, refresh transcripts\n\nAlso makes transcript redaction catch backslash-escaped emails.\n\nCo-Authored-By: Claude Sonnet
+… [truncated 84 chars]
+
+> Result:
+```
+added-line matches: 0
+f5a1180 Add lesson 6 notes, update CLAUDE.md, refresh transcripts | user@example.com | user@example.com
+5b114f7 Add Stop hook that blocks finishing while tests fail | user@example.com | user@example.com
+4783190 Add PostToolUse hook that runs Prettier on edited files | user@example.com | user@example.com
+3aa3e5b Add deny rule for reading .env | user@example.com | user@example.com
+```
+
+## Claude
+
+Everything is committed locally. Now I'll scrub the leak from every local commit, using the loose pattern this time, and check history by the same loose pattern.
+
+> **Tool:** Bash {"command":"git bundle create \"$TEMP/claudepractice-backup2.bundle\" --all 2>&1 | tail -1\necho \"--- commits containing the loose pattern BEFORE:\"; git grep -I -l \"user@example\" $(git rev-list --all) 2>/dev/null | cut -d: -f1 | sort -u | while read c; do echo \"$(git log -1 --format='%h %s' $c)\"; done\nexport FILTER_BRANCH_SQUELCH_WARNING=1\ngit filter-branch -f --tree-filter 'for f in
+… [truncated 697 chars]
+
+> Result:
+```
+--- commits containing the loose pattern BEFORE:
+2f47fbb Add CLAUDE.md and lesson 5 notes
+3aa3e5b Add deny rule for reading .env
+4783190 Add PostToolUse hook that runs Prettier on edited files
+5635184 Add pull request template
+5b114f7 Add Stop hook that blocks finishing while tests fail
+c88425f Add pull request template
+dc771bf Add CLAUDE.md and lesson 5 notes
+Ref 'refs/remotes/origin/docs/pr-template' was rewritten
+Ref 'refs/remotes/origin/main' was rewritten
+--- AFTER (loose pattern, all commits, all refs):
+(blank = clean)
+--- metadata:
+      4 user@example.com | user@example.com
+     11 user@example.com | user@example.com
+--- refs:
+refs/heads/chore/hooks
+refs/heads/chore/remove-scratch-files
+refs/heads/
+… [truncated 210 chars]
+```
+
+## Claude
+
+I found a leak I caused, and it's now fixed locally. The remote still needs one more step from you.
+
+**What happened:**
+- The public transcript `session-3.md` contained your real email, in escaped form (`...hotmail\\.com`), inside grep commands I had run.
+- My earlier "clean" checks searched for the plain form, so they missed it. I told you the history was clean, and that was wrong.
+- It was in 4 public commits, on `main` and on the PR branches. The repo was public from the time I merged PR #1 until a few minutes ago.
+- The actual exposure was a short window, and I can't tell whether anyone copied the repo during it.
+
+**What I've done:**
+- **Repo is private again,** so it no longer shows the leak publicly.
+- **Redaction fixed:** `course/export-transcripts.mjs` now catches escaped emails, partial ones such as `user@example\\|`, and common providers.
+- **Local history scrubbed:** every local commit and branch is clean. I searched all of history with the loose pattern, `user@example` and the profile path, and found nothing.
+- **Gate fixed:** my commit check was too blunt (it counted lines being removed) and, before that, too narrow. It now looks at the added lines with the loose pattern, and it blocked the commit twice today.
+- **Lesson 6 work is committed** on `chore/hooks`: notes, `CLAUDE.md`, progress, transcripts. Nothing from lesson 6 is pushed yet.
+
+**Your part:** the GitHub copy still holds the old commits and the PRs that point at them, so we need to recreate it again.
+1. Delete https://github.com/izolotarev/ClaudePractice at Settings → Danger Zone.
+2. Tell me when it's done.
+
+**Then I'll:**
+1. Recreate the repo as private and push `main` and `chore/hooks`.
+2. Open the PR with the template and merge it with rebase.
+3. Check the content on GitHub's side with the loose pattern, as well as the commit authors.
+4. Keep the repo private until you confirm that you want it public.
+
+**Two cleanups on your side:**
+- Two backup files in your temp folder, `claudepractice-backup.bundle` and `claudepractice-backup2.bundle`, still contain the old history with your real email. Delete them after the new repo is confirmed good. I can do that if you say so.
+- Because this keeps recurring, I'd suggest keeping the repo private from now on. Branch protection needs public or a paid plan, but the real protection against leaks is the checking, and that's now stricter.
+
+## You
+
+done, repo deleted, keep it public, remove filese in temp
+
+## Claude
+
+First I'll delete the backup files, then rebuild the repo.
+
+> **Tool:** Bash {"command":"ls -la \"$TEMP\"/claudepractice-backup*.bundle 2>&1; rm -f \"$TEMP\"/claudepractice-backup.bundle \"$TEMP\"/claudepractice-backup2.bundle\necho \"--- other temp files of mine that contain the address:\"; grep -l \"user@example\" \"$TEMP\"/export-final.mjs \"$TEMP\"/srv.log \"$TEMP\"/chk.log \"$TEMP\"/check.db 2>/dev/null; echo \"(blank = none)\"\nls \"$TEMP\"/claudepractice-backu
+… [truncated 19 chars]
+
+> Result:
+```
+-rw-r--r-- 1 Igor 197609 100375 Nov 14 23:35 C:\Users\USER\AppData\Local\Temp/claudepractice-backup.bundle
+-rw-r--r-- 1 Igor 197609 144653 Nov 15 10:41 C:\Users\USER\AppData\Local\Temp/claudepractice-backup2.bundle
+--- other temp files of mine that contain the address:
+(blank = none)
+ls: cannot access 'C:\Users\USER\AppData\Local\Temp/claudepractice-backup*': No such file or directory
+```
+
+## Claude
+
+The two backup bundles are deleted. I found no other temp files with your address. Now I'll recreate the repo, still private for now, after a final check of exactly what I'm about to push.
+
+> **Tool:** Bash {"command":"git remote remove origin 2>/dev/null; git for-each-ref --format='%(refname)' refs/remotes | xargs -r -n1 git update-ref -d\necho \"--- PRE-PUSH check on main and chore/hooks:\"\necho \"loose email/path matches in content: $(git grep -I -l -i 'user@example\\|Users.\\{1,2\\}Igor' $(git rev-list main chore/hooks) 2>/dev/null | wc -l)\"\necho \"author/committer emails:\"; git log mai
+… [truncated 2481 chars]
+
+> Result:
+```
+--- PRE-PUSH check on main and chore/hooks:
+loose email/path matches in content: 0
+author/committer emails:
+      4 user@example.com | user@example.com
+      6 user@example.com | user@example.com
+.env tracked: 0
+https://github.com/izolotarev/ClaudePractice
+ * [new branch]      main -> main
+ * [new branch]      chore/hooks -> chore/hooks
+https://github.com/izolotarev/ClaudePractice/pull/1
+```
+
+## Claude
+
+The pre-push checks were clean, and the PR is open. Now I'll merge it with rebase and verify on GitHub's side, with the loose pattern.
+
+> **Tool:** Bash {"command":"gh pr merge 1 --rebase 2>&1 | tail -1; sleep 3; git fetch -q origin\necho \"--- GitHub main commits:\"; gh api repos/izolotarev/ClaudePractice/commits --jq '.[] | \"\\(.sha[0:7]) \\(.commit.message | split(\"\\n\")[0]) | \\(.commit.author.email) | \\(.commit.committer.email)\"'\necho \"--- loose search on what GitHub holds (all commits on origin/main): $(git grep -I -l -i 'user@example
+… [truncated 417 chars]
+
+> Result:
+```
+--- GitHub main commits:
+b9d08b4 Add lesson 6 notes, update CLAUDE.md, refresh transcripts | user@example.com | user@example.com
+7209a69 Add Stop hook that blocks finishing while tests fail | user@example.com | user@example.com
+55906cc Add PostToolUse hook that runs Prettier on edited files | user@example.com | user@example.com
+023b45c Add deny rule for reading .env | user@example.com | user@example.com
+2598ca3 Add pull request template | user@example.com | user@example.com
+e639bc4 Add CLAUDE.md and lesson 5 notes | user@example.com | 22840
+… [truncated 727 chars]
+```
+
+> **Tool:** Bash {"command":"git switch -q main && git branch -u origin/main >/dev/null 2>&1; git merge -q --ff-only origin/main 2>&1 | tail -1\ngh repo edit izolotarev/ClaudePractice --visibility public --accept-visibility-change-consequences 2>&1 | tail -1; gh api repos/izolotarev/ClaudePractice --jq .visibility\nfor i in 1 2 3 4 5 6; do sleep 10; out=$(gh api -X PUT repos/izolotarev/ClaudePractice/branches/main
+… [truncated 596 chars]
+
+> Result:
+```
+public
+try 1: {"url":"https://api.github.com/repos/izolotarev/ClaudePractice/branches/main/protection","
+remote: error: GH006: Protected branch update failed for refs/heads/main.        
+remote: - Changes must be made through a pull request.        
+ ! [remote rejected] main -> main (protected branch hook declined)
+## main...origin/main
+b9d08b4 Add lesson 6 notes, update CLAUDE.md, refresh transcripts
+CLAUDE.md
+
+.claude:
+hooks
+settings.json
+
+.github:
+pull_request_template.md
+```
+
+## Claude
+
+I'll record the lesson in my memory notes so I don't repeat the mistake.
+
+> **Tool:** Edit {"replace_all":false,"file_path":"C:\\Users\\USER\\.claude\\projects\\c--Repositories-SampleApp\\memory\\transcript-redaction.md","old_string":"Related: [[course-routine]]","new_string":"**Leak history (2026-11-14/15):** the real email got into public transcripts twice. (1) A GitHub squash merge wrote the account email as commit author. (2) My own grep commands containing the address were exported
+… [truncated 918 chars]
+
+> Result:
+```
+The file C:\Users\USER\.claude\projects\c--Repositories-SampleApp\memory\transcript-redaction.md has been updated successfully.
+```
+
+## Claude
+
+**Lesson 6 is wrapped up, and the repo is public and clean.**
+
+**What I did:**
+- **Backups deleted:** both `claudepractice-backup*.bundle` files are gone from your temp folder. I found no other temp files with your address.
+- **Repo recreated** at https://github.com/izolotarev/ClaudePractice. Before pushing, I searched everything I was about to push with the loose pattern and found nothing.
+- **PR #1 merged with rebase.** It contained the lesson 6 work: the deny rule, the Prettier hook, the Stop hook, the notes, and the stricter redaction.
+- **Verified on GitHub's side:** all 10 commits on `main` show the no-reply email for author and committer. A loose search of the content found 0 files with your address or profile path.
+- **Public again, with the branch rule.** I tested it with a throwaway empty commit, and GitHub rejected the direct push with "Changes must be made through a pull request". I removed that commit locally.
+- **Lessons 1 to 6 are marked done**, and my memory notes now record the leak and the checks.
+
+**One honest limit:** the repo was public for a window earlier today with the escaped email in a transcript. I can't tell whether anyone copied it. If you want to reduce risk further, consider treating that address as already exposed to spam. That's up to you.
+
+**Still open:** the Windows username path `C:\Users\USER` shows as `USER` in transcripts, but your first name "Igor" still appears as the committer name on rebased commits (your GitHub display name), and in conversation text.
+
+Lesson 7 is next: subagents and review, with a `reviewer` subagent that can read but not edit. Start now?
+
+## You
+
+should I clean the context?
+
+## Claude
+
+Yes, now is a good time.
+
+**Why:**
+- **Lesson 6 is finished and merged.** Lesson 7 is a different task, so nothing in the current conversation helps it.
+- **The conversation is long.** It has big outputs in it: test runs, the Stop hook's failure dump, and the docs pages. They are re-sent on every turn, and they cost money and can distract me.
+- **Everything that matters is saved in files,** so clearing loses nothing you need.
+
+**What survives `/clear`:**
+- `CLAUDE.md`, loaded fresh, including the hooks and git rules.
+- My memory notes: the course routine, the redaction and privacy checks, and the course status.
+- `course/PLAYBOOK.md`, `PROGRESS.md`, `SYLLABUS.md` and the transcripts in the repo.
+- The `.claude/settings.json` hooks and deny rule, which keep applying.
+- The code, the git history and the GitHub repo.
+
+**What you lose:** only my short-term recall of this conversation. If I need a detail, I can look it up in the files or the transcripts.
+
+**One thing to expect:** the last part of this lesson, from the privacy cleanup to now, isn't in the committed transcripts yet. The raw logs still exist locally, and the next export will include them. I'll commit it with lesson 7's notes.
+
+**After `/clear`:**
+1. Run `/context`. This time `CLAUDE.md` should appear, which is the check we promised in lesson 5.
+2. Then say "start lesson 7". I'll read `PROGRESS.md` and the syllabus first, and my notes will remind me of the privacy checks.
+
+Go ahead and `/clear` whenever you're ready.

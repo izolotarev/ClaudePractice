@@ -10,6 +10,8 @@ const redact = (s) =>
     // Emails, including grep-style escaped ones such as name@host\\.com, and partial ones such as name@host\\|
     .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\*\.[A-Za-z0-9-]+)+/g, 'user@example.com')
     .replace(/[A-Za-z0-9._%+-]+@(?:hotmail|gmail|outlook|yahoo)\b/gi, 'user@example')
+    // Fragments cut off by clip(), such as name@h at the end of a truncated command
+    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z]{1,3}(?![A-Za-z0-9.-])/g, 'user@example')
     .replace(/Users([\\/]+)Igor/g, 'Users$1USER');
 
 const clip = (s, n) => (s.length > n ? s.slice(0, n) + `\n… [truncated ${s.length - n} chars]` : s);
