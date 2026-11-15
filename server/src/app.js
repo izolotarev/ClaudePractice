@@ -4,6 +4,9 @@ import fs from 'node:fs';
 
 const toTodo = (r) => ({ id: r.id, text: r.text, done: !!r.done, created_at: r.created_at });
 
+// Ids are positive integers in canonical form; anything else ('1.0', '1e0', 'abc') matches no todo.
+const parseId = (raw) => (/^[1-9]\d{0,15}$/.test(raw) ? Number(raw) : null);
+
 export function createApp(db, { staticDir } = {}) {
   const app = express();
   app.use(express.json());
@@ -25,13 +28,17 @@ export function createApp(db, { staticDir } = {}) {
   app.patch('/api/todos/:id', (req, res) => {
     const done = req.body?.done;
     if (typeof done !== 'boolean') return res.status(400).json({ error: 'done must be a boolean' });
-    const info = db.prepare('UPDATE todos SET done = ? WHERE id = ?').run(done ? 1 : 0, req.params.id);
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(404).json({ error: 'not found' });
+    const info = db.prepare('UPDATE todos SET done = ? WHERE id = ?').run(done ? 1 : 0, id);
     if (!info.changes) return res.status(404).json({ error: 'not found' });
-    res.json(toTodo(db.prepare('SELECT * FROM todos WHERE id = ?').get(req.params.id)));
+    res.json(toTodo(db.prepare('SELECT * FROM todos WHERE id = ?').get(id)));
   });
 
   app.delete('/api/todos/:id', (req, res) => {
-    const info = db.prepare('DELETE FROM todos WHERE id = ?').run(req.params.id);
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(404).json({ error: 'not found' });
+    const info = db.prepare('DELETE FROM todos WHERE id = ?').run(id);
     if (!info.changes) return res.status(404).json({ error: 'not found' });
     res.status(204).end();
   });
