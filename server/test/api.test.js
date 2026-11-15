@@ -62,6 +62,22 @@ describe('API', () => {
     expect(r.body.done).toBe(false);
   });
 
+  it('PATCH updates only the todo with that id when ids have gaps', async () => {
+    for (const text of ['a', 'b', 'c', 'd']) await request(app).post('/api/todos').send({ text });
+    await request(app).delete('/api/todos/1');
+    await request(app).delete('/api/todos/3');
+    // Remaining rows: id 2 ('b') and id 4 ('d'), at list positions 1 and 2.
+    const r = await request(app).patch('/api/todos/4').send({ done: true });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ id: 4, text: 'd', done: true });
+    const list = await request(app).get('/api/todos');
+    expect(list.body.map((t) => [t.id, t.done])).toEqual([
+      [2, false],
+      [4, true],
+    ]);
+    expect((await request(app).patch('/api/todos/3').send({ done: true })).status).toBe(404);
+  });
+
   it('PATCH 400 on non-boolean, 404 on missing', async () => {
     await request(app).post('/api/todos').send({ text: 'a' });
     expect((await request(app).patch('/api/todos/1').send({ done: 'yes' })).status).toBe(400);
