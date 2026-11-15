@@ -8,7 +8,7 @@
 | 4 | Git and GitHub | done |
 | 5 | CLAUDE.md and context | done |
 | 6 | Permissions and hooks | done |
-| 7 | Subagents and review | not started |
+| 7 | Subagents and review | done |
 | 8 | GitHub Actions with Claude | not started |
 | 9 | Deploy | not started |
 | 10 | Headless, cost, wrap-up | not started |

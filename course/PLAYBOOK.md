@@ -1,6 +1,6 @@
 # Claude Code playbook
 
-Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6.
+Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6, 7.
 
 ## Lesson 1: Operate a session safely
 
@@ -133,6 +133,27 @@ Copy this file into any new project. Updated after each lesson. Lessons done: 1,
 - Each Stop adds the full test time (about 4 seconds here).
 - Check the docs before writing a hook. An assumed environment variable was wrong; the docs showed the stdin JSON instead.
 - On Windows the docs' `jq` examples need Git Bash, or set `"shell": "powershell"`.
+
+## Lesson 7: Subagents and review
+
+**Goal:** a reviewer that didn't write the code.
+
+**Steps that worked:**
+
+1. Create `.claude/agents/reviewer.md`: frontmatter `name`, `description`, `tools: Read, Grep, Glob`, then a one-line instruction: `Compare the changed files to the spec. Report only gaps that affect correctness. Skip style.` Commit it so the team shares it.
+2. `have the reviewer check the app against @SPEC.md`. The report came back with file:line references and no edits.
+3. Turn the review's weak spots into work: it noted PATCH tests used one row. Add a test with several rows and gapped ids, plant the bug (patch by list position) to see the test **fail**, revert, see it pass.
+4. `/code-review` on the branch diff. You type it; Claude can't launch it. It found no bugs and two low-severity test-diagnostic notes.
+
+**Facts and gotchas:**
+
+- **Agent files load at session start.** `reviewer.md` created mid-session was reported as "Agent type 'reviewer' not found". Restart the session (or reload agents) first. A general-purpose agent given the same instructions was the fallback.
+- A subagent starts with fresh context and returns only a summary. It costs extra tokens and is no smarter; the value is parallelism, noise isolation and a fresh pair of eyes.
+- Restricting `tools` to Read, Grep, Glob is what makes it unable to edit files. It also can't run tests, so its review is from reading only. Ask for `npm test` separately.
+- "Skip style" keeps a reviewer from inventing nitpicks. Set `model: haiku` in the frontmatter for simple jobs.
+- A reviewer's blind spot is its own claims: it said strikethrough was unverified because the CSS wasn't in the files it read. Treat "not checked" lines as follow-ups.
+- Rebase merges change commit hashes, so `git branch --merged` won't list merged branches. Compare with `git cherry main <branch>` (lines starting `-` are already in main) or check PR state with `gh pr list --state all --head <branch>`.
+- `gh pr merge <n> --rebase --delete-branch` also removes the local branch; run `git fetch --prune` afterwards to drop the stale remote ref.
 
 ## Todo app stack (reuse as a template)
 
