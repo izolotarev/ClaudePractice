@@ -27,6 +27,12 @@ Single-list todo app (add, complete, delete). Also a learning project for CI/CD 
 - Tests that use a single row hide bugs. A past planted bug (DELETE by list position instead of id) passed every test until a test with gaps in ids was added. Use several rows and out-of-order ids.
 - Windows: write multi-file changes with the Write tool, not long shell heredocs. Stop a server by its port's process ID, never kill all `node` processes.
 
+## Hooks and permissions (`.claude/settings.json`)
+
+- Deny rule: `Read(./.env)`. Never read `.env` or try to get around the rule.
+- PostToolUse hook runs Prettier (`.claude/hooks/format.mjs`, config in `.prettierrc`) on edited code files. It may reformat the whole file, so expect formatting-only diffs.
+- Stop hook runs `npm test`; I can't finish a turn while tests fail. Fix the tests, don't bypass the hook.
+
 ## Git and privacy rules
 
 - `main` is protected: change it only through a PR. Branch names: `feat/`, `fix/`, `chore/`, `docs/`.

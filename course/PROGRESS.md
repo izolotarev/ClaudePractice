@@ -7,7 +7,7 @@
 | 3 | Tests as the check | done |
 | 4 | Git and GitHub | done |
 | 5 | CLAUDE.md and context | done |
-| 6 | Permissions and hooks | not started |
+| 6 | Permissions and hooks | done |
 | 7 | Subagents and review | not started |
 | 8 | GitHub Actions with Claude | not started |
 | 9 | Deploy | not started |

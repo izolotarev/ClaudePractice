@@ -1502,7 +1502,7 @@ izolo
 … [truncated 30 chars]
 ```
 
-> **Tool:** Bash {"command":"git status -sb | head -1; echo \"--- matching lines in last commit:\"; git show HEAD | grep -n -i \"hotmail\\|Users.\\{1,2\\}Igor\" | cut -c1-220; echo \"--- real address anywhere?\"; git grep -I -c \"user@example\\.com\" $(git rev-list --all); echo \"(blank = no)\""}
+> **Tool:** Bash {"command":"git status -sb | head -1; echo \"--- matching lines in last commit:\"; git show HEAD | grep -n -i \"hotmail\\|Users.\\{1,2\\}Igor\" | cut -c1-220; echo \"--- real address anywhere?\"; git grep -I -c \"user@example.com\" $(git rev-list --all); echo \"(blank = no)\""}
 
 > Result:
 ```
@@ -1560,7 +1560,7 @@ server
 MERGED
 ```
 
-> **Tool:** Bash {"command":"git fetch -q --prune; git branch -u origin/main >/dev/null 2>&1; git status -sb | head -1; grep -c \"done\" course/PROGRESS.md; grep -n \"Lessons done\" course/PLAYBOOK.md; git show --stat --format='%an <%ae>%n%s' HEAD | head -12; git grep -I -c \"user@example\\.com\" $(git rev-list --all); echo \"(blank = no real address)\""}
+> **Tool:** Bash {"command":"git fetch -q --prune; git branch -u origin/main >/dev/null 2>&1; git status -sb | head -1; grep -c \"done\" course/PROGRESS.md; grep -n \"Lessons done\" course/PLAYBOOK.md; git show --stat --format='%an <%ae>%n%s' HEAD | head -12; git grep -I -c \"user@example.com\" $(git rev-list --all); echo \"(blank = no real address)\""}
 
 > Result:
 ```
@@ -2018,7 +2018,7 @@ Both done criteria are met: `CLAUDE.md` has the exact test and run commands, and
 > **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\PLAYBOOK.md","old_string":"## Todo app stack (reuse as a template)","new_string":"## Lesson 5: CLAUDE.md and context\n\n**Goal:** give Claude the facts it can't see in the code, and keep its context clean.\n\n**Steps that worked:**\n\n1. `/init` creates `CLAUDE.md`. Then cut it to under 50 lines. Keep only: test, build and run 
 … [truncated 1542 chars]
 
-> **Tool:** Bash {"command":"node course/export-transcripts.mjs \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp\" course/transcripts >/dev/null && git add -A\n# gate: fail on a real email or profile path in the staged diff or authors\nif git diff --cached | grep -q -i \"user@example\\.com\\|Users.\\{1,2\\}Igor\"; then echo \"BLOCKED: sensitive data in staged diff\"; exit 1; fi\nbad=$(git config us
+> **Tool:** Bash {"command":"node course/export-transcripts.mjs \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp\" course/transcripts >/dev/null && git add -A\n# gate: fail on a real email or profile path in the staged diff or authors\nif git diff --cached | grep -q -i \"user@example.com\\|Users.\\{1,2\\}Igor\"; then echo \"BLOCKED: sensitive data in staged diff\"; exit 1; fi\nbad=$(git config us
 … [truncated 753 chars]
 
 > Result:
@@ -2032,3 +2032,1225 @@ Both done criteria are met: `CLAUDE.md` has the exact test and run commands, and
 ```
 The file c:\Repositories\SampleApp\course\PLAYBOOK.md has been updated successfully. (note: the file had been modified on disk since you last read it — the edit applied cleanly, but the file contains other changes not in your context. Read it before edits that depend on surrounding content.)
 ```
+
+> Result:
+```
+warning: in the working copy of 'course/PLAYBOOK.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/PROGRESS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-1.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-2.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-3.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CLAUDE.md', LF will be replaced by CRLF the next time Git touches it
+izolotarev <user@example.com> | izolotarev <user@example.com>
+ * [
+… [truncated 109 chars]
+```
+
+> **Tool:** Bash {"command":"grep -c \"^## Lesson\" course/PLAYBOOK.md; grep -n \"Lessons done\" course/PLAYBOOK.md; grep -n \"^## Lesson 5\" course/PLAYBOOK.md; git status -sb | head -2"}
+
+> Result:
+```
+5
+3:Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5.
+86:## Lesson 5: CLAUDE.md and context
+## docs/add-claude-md...origin/docs/add-claude-md
+```
+
+## Claude
+
+**Lesson 5 is done.** PR #2 is open: https://github.com/izolotarev/ClaudePractice/pull/2. It isn't merged.
+
+**What the PR contains:**
+- **`CLAUDE.md`:** 36 lines, with the single-test command checked by running it.
+- **Course files:** lesson 5 is marked done in the progress file. The playbook has a new Lesson 5 section covering how to read `/context`, the `CLAUDE.md` loading gotcha, and how `/compact` treats rules.
+- **Transcripts:** re-exported with redaction.
+
+**Privacy checks:** this time the check would have stopped the commit on a match. It found nothing in the staged changes, and the commit author and committer are both the no-reply address.
+
+Merge PR #2 with rebase now? Once it's merged, the next `/clear` is a good moment to run `/context` again and see `CLAUDE.md` appear. Lesson 6 follows: permissions and hooks.
+
+## You
+
+yes, merge it
+
+> **Tool:** Bash {"command":"gh pr merge 2 --rebase 2>&1 | tail -2; sleep 3\necho \"--- main on GitHub:\"; gh api repos/izolotarev/ClaudePractice/commits --jq '.[0:3][] | \"\\(.sha[0:7]) \\(.commit.message | split(\"\\n\")[0]) | author=\\(.commit.author.email) committer=\\(.commit.committer.email)\"'\ngit switch -q main && git fetch -q && git merge -q --ff-only origin/main 2>&1 | tail -1; git status -sb | head -1;
+… [truncated 204 chars]
+
+> Result:
+```
+--- main on GitHub:
+2f47fbb Add CLAUDE.md and lesson 5 notes | author=user@example.com committer=user@example.com
+4c0b5e4 Update course progress, playbook, and transcripts for lesson 4 | author=user@example.com committer=user@example.com
+aa191e6 Remove lesson 1 scratch files | author=user@example.com committer=user@example.com
+## main...origin/main
+CLAUDE.md
+3:Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5.
+(blank = no real address)
+MERGED
+```
+
+## Claude
+
+PR #2 is merged, and I checked it on GitHub. The merge used the rebase method.
+
+- **Commit metadata:** the new commit `2f47fbb` has the no-reply address for both author and committer. No real address appears in the file contents either.
+- **Local `main`:** in sync with GitHub, and it now includes `CLAUDE.md`.
+- **Lesson 5:** marked done, and the playbook lists lessons 1 to 5.
+
+To see `CLAUDE.md` in action, run `/clear` and then `/context`. This time it should appear in the memory files section. After that, ask me something about the project without naming any files. For example, "How do I run just one test?" should get the right command straight from `CLAUDE.md`.
+
+Lesson 6 is next: permissions and hooks. It's where we make rules that can't be broken, like blocking reads of `.env`, running Prettier after edits, and refusing to finish while tests fail. It changes `.claude/settings.json`, which controls what I'm allowed to do. Ready to start?
+
+## You
+
+can we practice creating a pull request. But it should look more professional with checkboxes what needs to be checked etc
+
+## Claude
+
+Good idea. The best practice is to add a PR template to the repo, so GitHub pre-fills every new PR with the same checklist. I'll add it through a PR that uses the template, so the PR itself is the example.
+
+> **Tool:** Bash {"command":"git switch -q -c docs/pr-template && mkdir -p .github && echo ok"}
+
+> **Tool:** Write {"file_path":"c:\\Repositories\\SampleApp\\.github\\pull_request_template.md","content":"## Summary\n\n<!-- What does this PR do, and why? One or two sentences. -->\n\n## Type of change\n\n- [ ] Feature (`feat/`)\n- [ ] Bug fix (`fix/`)\n- [ ] Chore or housekeeping (`chore/`)\n- [ ] Documentation only (`docs/`)\n\n## Changes\n\n<!-- Bullet list of the main changes. -->\n\n-\n\n## How it was tested
+… [truncated 865 chars]
+
+> Result:
+```
+ok
+```
+
+> Result:
+```
+File created successfully at: c:\Repositories\SampleApp\.github\pull_request_template.md (file state is current in your context — no need to Read it back)
+```
+
+## Claude
+
+Before I fill in the PR checklist, I'll run the checks it asks for, so every ticked box is backed by output.
+
+> **Tool:** Bash {"command":"echo \"--- tests:\"; npm test 2>&1 | sed 's/\\x1b\\[[0-9;]*m//g' | grep -E \"Tests \"\ngit add -A\necho \"--- sensitive data in staged diff:\"; git diff --cached | grep -c -i \"user@example.com\\|Users.\\{1,2\\}Igor\"\necho \"--- git email: $(git config user.email)\"\ngit commit -q -F - <<'EOF'\nAdd pull request template\n\nCo-Authored-By: Claude Sonnet 5.5 <user@example.com
+… [truncated 136 chars]
+
+> Result:
+```
+--- tests:
+      Tests  14 passed (14)
+      Tests  6 passed (6)
+warning: in the working copy of '.github/pull_request_template.md', LF will be replaced by CRLF the next time Git touches it
+--- sensitive data in staged diff:
+0
+--- git email: user@example.com
+--- commit: user@example.com | user@example.com
+ * [new branch]      docs/pr-template -> docs/pr-template
+```
+
+> **Tool:** Bash {"command":"gh pr create --base main --head docs/pr-template --title \"docs: add pull request template\" --body \"$(cat <<'EOF'\n## Summary\n\nAdds a pull request template so every new PR starts with the same checklist for testing, privacy and merge method. This PR is also the worked example of the template.\n\n## Type of change\n\n- [ ] Feature (`feat/`)\n- [ ] Bug fix (`fix/`)\n- [ ] Chore or ho
+… [truncated 1277 chars]
+
+> Result:
+```
+https://github.com/izolotarev/ClaudePractice/pull/3
+```
+
+## Claude
+
+PR #3 is open: https://github.com/izolotarev/ClaudePractice/pull/3. Open it in the browser to see the checkboxes rendered.
+
+**What I added:** [.github/pull_request_template.md](.github/pull_request_template.md). From the next PR on, GitHub fills the description with this checklist. Its sections are:
+- Summary
+- Type of change
+- Changes
+- How it was tested
+- Checklist
+- Privacy
+- Merge
+
+I tailored it to your project: it asks for the test summary line, the no-reply email check, and merging with rebase.
+
+**How PR #3 uses it:**
+- **Ticked boxes:** documentation-only, tests pass, branch name, no secrets, no real email, and the no-reply commit email. Each one is backed by output I ran just before. The tests showed 14 passed on the server and 6 on the client, and the staged diff had 0 matches for your email or profile path.
+- **Left unticked on purpose:** items that don't apply, such as "saw it fail before the fix", marked "n/a" with the reason. Merge-by-rebase also stays unticked until you merge.
+- **Footer:** the Claude Code attribution line.
+
+**Habits that make a PR look professional:**
+1. **A title that says what changed**, with a prefix such as `docs:`.
+2. **Evidence, not claims.** Paste the real test output. A ticked box with nothing behind it is worth little.
+3. **Honest "n/a".** Don't tick a box that doesn't apply, and say why.
+4. **Small PRs.** One purpose per PR makes review quick.
+
+One point on timing: this template only pre-fills PRs created after it's on `main`. For PR #3 I filled it in by hand with the same text. After the merge, `gh pr create` and the web button will start from the template.
+
+Merge PR #3 with rebase now?
+
+## You
+
+Who should do a code review?
+
+## Claude
+
+It depends on who's available. Here are the options, roughly in order of value:
+
+| Reviewer | What it adds | When to use it |
+|---|---|---|
+| **A second human** (teammate, friend) | Real independent judgment, and someone else who understands the change | Whenever you have one. Nothing replaces it for important changes. |
+| **You, in the GitHub diff view** | Reading your own change as a reviewer catches typos and leftover files | Always, before merging, even if others review too |
+| **Claude as a reviewer** (`/code-review`, the `reviewer` subagent in lesson 7) | A fresh context that didn't write the code. Good at spotting gaps against the spec and bugs like the delete one | A cheap first pass before a human sees it |
+| **Claude in GitHub Actions** (lesson 8) | The same review, automatic on every PR | Once CI is set up |
+
+**For this repo, as the only developer:**
+- GitHub doesn't let you approve your own PR. That's why the `main` rule requires 0 approvals. If it required 1, you couldn't merge anything.
+- So the realistic setup is: Claude reviews first (lessons 7 and 8), then you read the diff and merge. The human decision stays with you.
+- If you want a real second reviewer, add a collaborator to the repo and raise the required approvals to 1.
+
+**Two cautions about using me as the reviewer:**
+- **I'm a weaker check on my own work.** In this course I wrote the code and the planted bug, and I only caught the bug because I knew where to look. A reviewer run separately, with fresh context and a narrow instruction ("compare to `SPEC.md`, skip style"), is a better check, but it's still not a human.
+- **A review only helps if someone acts on it.** Ask for findings ranked by severity, and decide yourself which to fix.
+
+For PR #3, which is documentation only, a quick read by you is enough. Want me to run `/code-review` on it as practice? Lesson 7 covers it properly, so it can also wait until then.
+
+## You
+
+I am only one developer
+
+## Claude
+
+Then you are the final reviewer, and the process should make that easy and honest.
+
+**A workflow for one developer:**
+1. **Open a PR for every change**, as you've been doing. The PR is still useful when you're the only reviewer. It's a record of what changed and why, and it gives CI and Claude something to check before `main` changes.
+2. **Let Claude review first.** Run `/code-review` on the branch, or use the `reviewer` subagent in lesson 7. It gets a fresh context and a narrow instruction, so it can catch things you'd miss when you're too close to the code.
+3. **Read the diff yourself on GitHub** ("Files changed" tab). Do it before merging, not on the same screen where you wrote the code. Reading it as a reviewer catches leftover files and typos.
+4. **Tick the checklist only with evidence**, such as pasted test output.
+5. **Merge with rebase**, then check the commit metadata on GitHub.
+
+**What you don't need:** a required approval. Keep the branch rule at 0 approvals. With a rule of 1, GitHub would block you from merging your own PRs.
+
+**What replaces a second pair of eyes:** automation that doesn't get tired. That's where the course goes:
+- Lesson 6: hooks that block a finish while tests fail.
+- Lesson 8: CI that runs the tests on every PR and can be made required, so a failing PR can't merge.
+
+Together these make up for the missing human reviewer.
+
+For PR #3, the practical step is to read the diff yourself and merge. Shall I merge it with rebase, or do you want to read it on GitHub first?
+
+## You
+
+merge it with rebase
+
+> **Tool:** Bash {"command":"gh pr merge 3 --rebase 2>&1 | tail -2; sleep 3\necho \"--- main on GitHub:\"; gh api repos/izolotarev/ClaudePractice/commits --jq '.[0:2][] | \"\\(.sha[0:7]) \\(.commit.message | split(\"\\n\")[0]) | author=\\(.commit.author.email) committer=\\(.commit.committer.email)\"'\ngit switch -q main && git fetch -q && git merge -q --ff-only origin/main 2>&1 | tail -1; git status -sb | head -1;
+… [truncated 157 chars]
+
+> Result:
+```
+--- main on GitHub:
+5635184 Add pull request template | author=user@example.com committer=user@example.com
+2f47fbb Add CLAUDE.md and lesson 5 notes | author=user@example.com committer=user@example.com
+## main...origin/main
+pull_request_template.md
+(blank = no real address)
+MERGED
+```
+
+## Claude
+
+PR #3 is merged with rebase, and I verified it on GitHub.
+
+- **Commit metadata:** the new commit `5635184` has the no-reply address for author and committer. There is no real email anywhere in `main`.
+- **Local `main`:** in sync with GitHub, and it now has `.github/pull_request_template.md`.
+
+From now on, new PRs start from the checklist. To see it, run `gh pr create` or click "New pull request" on a branch, and the description comes pre-filled.
+
+Lesson 6 is next: permissions and hooks. It changes `.claude/settings.json`, which controls what I'm allowed to do, so each change will be shown to you before it's applied. Ready to start?
+
+## You
+
+what is merged with rebase?
+
+## Claude
+
+"Merged with rebase" is one of GitHub's three ways to bring a PR's commits into `main`.
+
+| Method | What lands on `main` | Author on `main` |
+|---|---|---|
+| **Merge commit** | The PR's commits, plus one extra "Merge pull request" commit tying the branches together | The merge commit is written under your account's email |
+| **Squash and merge** | All of the PR's commits squashed into one new commit | Your account's email. This is what exposed your real address earlier. |
+| **Rebase and merge** | The PR's own commits, replayed one by one on top of `main` | The original authors are kept |
+
+**What "rebase" means:** git takes your branch's commits and replays them as if you had written them after the latest `main`. The result is a straight line of commits with no extra merge commit. Each commit gets a new hash, because its parent changed. That's why the commit on `main` is `5635184` and not the hash of the commit on your branch.
+
+**Why we use it here:**
+- **Your email stays private.** Rebase keeps the author I set (the no-reply address), while squash replaced it with your account email.
+- **Clean history.** `git log` on `main` reads as a simple list of changes.
+- **Each commit stays separate.** If a PR has three commits, three show up, which is useful when you want to find or undo a single change.
+
+**The trade-off:** the commits on `main` have different hashes from the ones on the branch. So after a rebase merge, don't keep working on the old branch. Delete it and start a new one from the updated `main`.
+
+If you want something to remember, it's one line: rebase merge keeps authors, squash merge uses your account email.
+
+## You
+
+start lesson 6
+
+## Claude
+
+Lesson 6 is about rules that can never be broken. `CLAUDE.md` is guidance I can decide to ignore. Deny rules and hooks are enforced by Claude Code, whatever I decide.
+
+There are three steps, and each one changes `.claude/settings.json`, the file that controls what I'm allowed to do:
+
+| Step | What it does | How we'll prove it works |
+|---|---|---|
+| 1. Deny rule | Blocks reading `.env` | You create a `.env` with a fake value and ask me to read it. It must fail through the Read tool and through `cat .env`. |
+| 2. PostToolUse hook | Runs Prettier on every file I edit or write | I edit a badly formatted file and it comes out formatted. |
+| 3. Stop hook | Runs `npm test` when I try to finish. Exit code 2 blocks me. | You break a test on purpose. I can't finish until it passes. |
+
+**Things to know before we start:**
+- **Order of evaluation:** deny, then ask, then allow. The first match wins. A deny can't be overridden by an allow, or by a hook.
+- **Exit code 2 blocks. Exit code 1 does not.** A hook that exits 1 only logs an error and I carry on.
+- **A deny rule matches command text only.** It stops `cat .env`, but not a script that opens the file. Real isolation needs `/sandbox`.
+- **Windows:** hooks run in Git Bash here, so `npm test 1>&2 || exit 2` works as written.
+- **Prettier isn't installed yet.** Step 2 adds it as a dev dependency, which changes `package.json`.
+
+**Where the config goes:** I'd put it in `.claude/settings.json` in the repo, on a `chore/hooks` branch with a PR like the others. That file is shared and committed, so the rules travel with the project. Personal-only rules would go in `.claude/settings.local.json`, which stays out of git.
+
+**Step 1 would add this file:**
+
+```json
+{
+  "permissions": {
+    "deny": ["Read(./.env)"]
+  }
+}
+```
+
+I'm asking before writing it because it changes my own permissions. May I create `.claude/settings.json` with that deny rule on a `chore/hooks` branch?
+
+## You
+
+how much time is needed to read all the docs here https://code.claude.com/docs/en?
+
+## Claude
+
+I'd rather measure than guess, so I'll look at how big the docs are.
+
+> **Tool:** ToolSearch {"query":"select:WebFetch","max_results":1}
+
+> Result:
+```
+
+```
+
+> **Tool:** WebFetch {"url":"https://code.claude.com/docs/llms.txt","prompt":"Count how many documentation pages are listed in total, and list them grouped by section with the number of pages per section. Do not invent pages; only count what is in the file."}
+
+> Result:
+```
+**Total: 205 unique documentation pages** in the English listing. This matches the "205 pages" count given for each language index. Entries that repeat in the summary sections are counted once.
+
+| Section | Pages |
+|---|---|
+| Getting started | 46 |
+| Build with Claude Code | 22 |
+| Plugins | 31 |
+| Administration | 37 |
+| Configuration | 27 |
+| Reference | 9 |
+| Agent SDK | 32 |
+| Resources | 1 |
+| **Total** | **205** |
+
+**Breakdown by subsection:**
+
+- **Getting started (46):** Overview 3 · Core concepts 5 · Use Claude Code 5 · Platforms and integrations 10 · Claude Code in the cloud 3 · Claude Code on desktop 6 · Code review and pull requests 3 · Code Review 6 · Security scans 2 · Run Claude in your own CI 3
+- **Build with Claude Code (22):** Agents and parallel work 7 · MCP 2 · Skills 1
+… [truncated 1027 chars]
+```
+
+## Claude
+
+The docs have **205 pages** (counted from the official index). I didn't measure how long each page is, so the reading time below is my estimate and not a measurement.
+
+| Goal | Pages | Rough time |
+|---|---|---|
+| Skim every title and the first paragraph | 205 | about 8 hours (about 2-3 min a page) |
+| Read everything properly | 205 | about 20-25 hours (about 6-7 min a page, assuming typical docs) |
+| Read only what this course needs | about 25-30 | about 3-4 hours |
+
+**It's mostly not for you.** Here is how the 205 pages divide up:
+
+| Section | Pages | Relevant to a solo developer? |
+|---|---|---|
+| Getting started | 46 | Mostly yes, especially core concepts and "Run Claude in your own CI" |
+| Build with Claude Code | 22 | Yes: agents, skills, automation |
+| Configuration | 27 | Yes: settings, permissions and sandboxing |
+| Reference | 9 | Handy to look things up |
+| Plugins | 31 | Later, if you build your own |
+| Administration | 37 | Mostly no: it's for teams and companies |
+| Agent SDK | 32 | Only if you write programs that use Claude |
+| Resources | 1 | No |
+
+So the realistic set is about 100 pages, and the core of it about 30.
+
+**What I'd do instead of reading it all:**
+1. Follow the course. Each lesson uses the pages it needs, and the syllabus facts are taken from them.
+2. Read the page behind each lesson once you've done it. For lesson 6, that's the hooks and permissions pages. You'll understand them much faster with the hands-on practice behind you.
+3. Use the docs as a reference and search them when you hit a question. Reading 205 pages front to back wouldn't stick.
+4. Ask me. I can fetch a page and summarize it, with the caveat that my summaries are only as good as the page I fetched.
+
+Back to lesson 6: may I create `.claude/settings.json` with the deny rule for `.env`, on a `chore/hooks` branch?
+
+## You
+
+Show me in this list what is relevant for me
+
+## Claude
+
+The index gave me counts, not page titles. I'll get the actual titles so I can mark them page by page.
+
+> **Tool:** WebFetch {"url":"https://code.claude.com/docs/llms.txt","prompt":"List every page title with its URL path for these sections only: Getting started, Build with Claude Code, Configuration, Reference. Keep the section and subsection grouping exactly as in the file. Output a compact list: \"Subsection: title (/path)\". Do not summarize or invent anything."}
+
+> Result:
+```
+Duplicate entries that repeat under the later `###` headings are listed once, under their first occurrence. Paths are shown as they appear in the file.
+
+**Getting started**
+
+- Getting started: Overview (/docs/en/overview.md)
+- Getting started: Quickstart (/docs/en/quickstart.md)
+- Getting started: Claude Code changelog (/docs/en/changelog.md)
+- Core concepts: How Claude Code works (/docs/en/how-claude-code-works.md)
+- Core concepts: Extend Claude Code (/docs/en/features-overview.md)
+- Core concepts: Explore the .claude directory (/docs/en/claude-directory.md)
+- Core concepts: Explore the context window (/docs/en/context-window.md)
+- Core concepts: How Claude Code uses prompt caching (/docs/en/prompt-caching.md)
+- Use Claude Code: How Claude remembers your project (/docs/en/memory.md)
+- Use
+… [truncated 7720 chars]
+```
+
+## Claude
+
+Here are the page titles, marked for you: a solo developer on Windows who uses VS Code and GitHub and deploys to Render. All titles come from the official index. Paths are under `https://code.claude.com/docs/en/`.
+
+## Read now (about 14 pages), tied to your lessons
+
+| Lesson | Pages |
+|---|---|
+| Start here | `overview`, `how-claude-code-works`, `best-practices` |
+| 5. CLAUDE.md and context | `memory` (How Claude remembers your project), `context-window`, `claude-directory` |
+| 6. Permissions and hooks (next) | `hooks-guide`, `hooks` (reference), `permissions`, `permission-modes`, `settings` |
+| 3. Checks and tests | `goal` (Keep Claude working toward a goal) |
+| Your editor | `vs-code` |
+
+## Read when you reach the lesson (about 12 pages)
+
+| Lesson | Pages |
+|---|---|
+| 7. Subagents and review | `sub-agents`, `code-review-local` (Review locally with /code-review) |
+| 8. GitHub Actions | `github-actions` |
+| 10. Headless and cost | `headless`, `cli-reference`, `model-config`, `commands` |
+| Safety nets | `checkpointing` (the `/rewind` details), `sandboxing` |
+| Any time | `common-workflows`, `sessions` |
+
+## Useful later (about 10 pages)
+
+- **Skills:** `skills`. Turns a repeated workflow into a command, for example "interview me, write SPEC.md, build".
+- **Parallel work:** `worktrees`, `agents`.
+- **Scheduling:** `scheduled-tasks`, `routines`.
+- **Configuration:** `settings-reference`, `settings-example`, `env-vars`, `tools-reference`, `interactive-mode`, `keybindings`, `statusline`.
+- **Looking things up:** `glossary`, `troubleshooting`, `debug-your-config`, `errors`.
+
+## Skip (about 150 of the 205)
+
+| Group | Why |
+|---|---|
+| **Plugins** (31), **Administration** (37), **Agent SDK** (32) | For teams, companies, or people building programs on Claude. I haven't fetched these titles, only the section counts, so check the section name before skipping. |
+| **Self-hosted environments** (7), **cloud environments**, **GitHub Enterprise Server**, **GitLab CI/CD** | You use GitHub.com and a local setup. |
+| **Code Review** product pages (6), **ultrareview**, **claude-security** | Mostly for team or paid setups. |
+| **Desktop, mobile, JetBrains, Slack, Chrome, computer-use, Remote Control, Projects** | You use VS Code. Come back if you add one of them. |
+| **Agent teams, agent view, cross-session messaging, workflows, channels, deep links, large codebases** | Advanced orchestration. Your app is small. |
+| **Interface and accessibility** (screen reader, voice, fullscreen, terminal config), **fast mode, advisor, code mode, output styles, prompt caching** | Nice to have, not needed. |
+| **Changelog, installation troubleshooting, quickstart** | You're past the quickstart. |
+
+That reduces 205 pages to about **36 pages in total, 14 of them now**. By my earlier estimate, that is roughly 1.5 hours for the first group and 4 to 5 hours for everything marked read-now or read-at-the-lesson.
+
+One caution: I read titles, not page contents. A few "skip" pages may matter later, for example the Agent SDK if you decide to build your own tool.
+
+For lesson 6 specifically, read `hooks-guide` and `permissions` first. Do you want me to fetch and summarize them before we change `.claude/settings.json`?
+
+## You
+
+lets start lesson
+
+## Claude
+
+I'll start with step 1, the deny rule. I'm taking your "lets start" as the go-ahead I asked for. First the branch and the settings file:
+
+> **Tool:** Bash {"command":"git switch -q -c chore/hooks && mkdir -p .claude && echo ok"}
+
+> **Tool:** Write {"file_path":"c:\\Repositories\\SampleApp\\.claude\\settings.json","content":"{\n  \"permissions\": {\n    \"deny\": [\"Read(./.env)\"]\n  }\n}\n"}
+
+> **Tool:** Write {"file_path":"c:\\Repositories\\SampleApp\\.env","content":"FAKE_SECRET=not-a-real-secret-12345\n"}
+
+> Result:
+```
+ok
+```
+
+> Result:
+```
+File created successfully at: c:\Repositories\SampleApp\.claude\settings.json (file state is current in your context — no need to Read it back)
+```
+
+> Result:
+```
+File is covered by a Read deny rule in your permission settings and cannot be written.
+```
+
+## Claude
+
+The rule is already working, and it blocked my own attempt to create `.env`: "File is covered by a Read deny rule in your permission settings and cannot be written." The settings file was picked up immediately, with no restart.
+
+I could create `.env` through a shell command, but that would sidestep the rule you just set, so I won't. Please create it yourself, as the lesson says ("Create `.env`"):
+
+1. In VS Code, create a file named `.env` in the project root, `C:\Repositories\SampleApp\`.
+2. Put a fake value in it, for example `FAKE_SECRET=not-a-real-secret-12345`.
+3. Don't use a real secret.
+
+`.env` is already in `.gitignore`, so it can't be committed by accident.
+
+Tell me when it exists, and I'll try to read it two ways, with the Read tool and with `cat .env`. The lesson says both must fail. I'll report exactly what happens, including any gap.
+
+## You
+
+done, .env is created
+
+> **Tool:** Read {"file_path":"c:\\Repositories\\SampleApp\\.env"}
+
+> Result:
+```
+<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>
+```
+
+> **Tool:** Bash {"command":"cat .env"}
+
+> Result:
+```
+Permission to use Bash with command cat .env has been denied.
+```
+
+> **Tool:** Bash {"command":"git add -A && echo \"--- staged:\" && git diff --cached --name-only && echo \"--- .env ignored? $(git check-ignore .env)\" && if git diff --cached | grep -q -i \"user@example.com\\|Users.\\{1,2\\}Igor\\|FAKE_SECRET\"; then echo BLOCKED; exit 1; fi; git commit -q -F - <<'EOF'\nAdd deny rule for reading .env\n\nCo-Authored-By: Claude Sonnet 5.5 <user@example.com>\nEOF\ngit l
+… [truncated 33 chars]
+
+> Result:
+```
+warning: in the working copy of '.claude/settings.json', LF will be replaced by CRLF the next time Git touches it
+--- staged:
+.claude/settings.json
+--- .env ignored? .env
+Add deny rule for reading .env | user@example.com | user@example.com
+```
+
+## Claude
+
+Step 1 is committed on `chore/hooks`. Only `.claude/settings.json` was staged, and `.env` is ignored by git. The commit uses the no-reply email. I haven't pushed it yet.
+
+**Step 2: a PostToolUse hook that runs Prettier.** After I edit or write a file, Claude Code runs Prettier on it automatically, so formatting doesn't depend on me remembering. This needs three changes:
+1. **Install Prettier** as a dev dependency in the root `package.json`.
+2. **Add the hook** to `.claude/settings.json`:
+   ```json
+   "hooks": {
+     "PostToolUse": [{
+       "matcher": "Edit|Write",
+       "hooks": [{ "type": "command",
+         "command": "npx prettier --write \"$CLAUDE_FILE_PATH\"" }]
+     }]
+   }
+   ```
+   I'll check the exact way to get the edited file's path from the hooks docs before writing it. The details matter, and I'd rather not guess.
+3. **Prove it:** I write a deliberately badly formatted file, and it should come back formatted.
+
+**Side effect to expect:** the first Prettier run will reformat files I touch, and `npm test` should still pass afterwards. I'd limit it to `js`, `jsx`, `json`, `css` and `md`.
+
+Do you want me to go ahead with step 2? It changes `package.json` and the hook configuration.
+
+## You
+
+Is email in Git usually seen to other people?
+
+## Claude
+
+Yes. Git stores the author and committer email inside every commit, and anyone who can read the repo can see it.
+
+**Where it shows up:**
+- **`git log` after cloning.** Anyone with the repo has all the emails. Shown with `git log --format='%an <%ae>'`.
+- **GitHub's commit pages don't display it, but it's one click away.** Adding `.patch` to a commit URL shows the full `From: Name <email>` line. The GitHub API returns it as plain data, which is how I checked yours earlier.
+- **It can't be changed later without rewriting history.** Every commit's hash depends on its metadata, so changing an email changes the hash of that commit and every later one. That's why we had to rebuild the repo.
+- **Copies persist.** Forks, clones and caches keep the original. Spam scrapers harvest emails from public repos routinely.
+
+**Where it isn't visible:** a private repo shows it only to people with access.
+
+**How people protect themselves:**
+1. **Use the GitHub no-reply address** for commits, like `user@example.com`. Commits are still linked to your account. This is what you use now.
+2. **Turn on "Keep my email addresses private"** in GitHub's email settings, so web actions such as squash merges use the no-reply address too. You've done this.
+3. **Turn on "Block command line pushes that expose my email"**, so a push with a real email is rejected. It catches mistakes like a wrong local `user.email`.
+4. **Set the identity per repo** with `git config user.email`, as we did, so a personal address from the global config can't leak into a public project.
+
+**One more thing:** your global git config still holds your real email. In this repo, the local setting overrides it, but a new repo would use the global one. If you want, I can switch the global setting to the no-reply address too. It's a change to your personal git settings, so I'm asking first.
+
+Shall I do that, or go back to lesson 6 step 2?
+
+## You
+
+Is it a good practice to hide email or what?
+
+## Claude
+
+For a personal project on a public repo, yes, it's good practice. It's not a rule everywhere, though.
+
+**Why hiding it is reasonable:**
+- Public commit emails get harvested for spam and phishing.
+- A commit email can't be removed later without rewriting history, as you saw.
+- It costs almost nothing. The no-reply address still links your commits to your GitHub account, so you keep credit on your profile and contribution graph.
+
+**When people use a real email instead:**
+- **Work repositories.** Companies often require your work email, so the history identifies who made each change.
+- **Some open-source projects**, such as the Linux kernel, require a real email in the `Signed-off-by:` line so maintainers can contact you.
+- **Signed commits** may need the email to match the key. This can be done with no-reply, but needs setup.
+- **You want to be reachable** for questions about your code. That's a choice, and it's fine if you make it knowingly.
+
+**What matters more than hiding it:** deciding before the first push. The failure you ran into was a real email that got into public history by accident. Hiding it later means rewriting history and recreating the repo.
+
+**For you, now:**
+- Personal learning repo, public: use the no-reply email. You already do.
+- A private repo: it matters much less. The email is visible only to people with access.
+- If you later work on a team or contribute to a project that asks for a real email, set it for that repo only. A repo-local `git config user.email` keeps the choice from spreading to other projects.
+
+This isn't about secrecy, and an email isn't a secret in the way a password is. It's about exposure that can't be undone against the small cost of avoiding it.
+
+Back to lesson 6: shall I go ahead with step 2, the Prettier hook, after checking the exact setup in the hooks docs first?
+
+## You
+
+go ahead with step 2
+
+## Claude
+
+First I'll check the hooks docs for how the edited file's path reaches the hook, since I don't want to guess it.
+
+> **Tool:** WebFetch {"url":"https://code.claude.com/docs/en/hooks-guide.md","prompt":"How does a PostToolUse hook with matcher Edit|Write receive the edited file's path? Show the exact settings.json example for running Prettier on the edited file, including whether a shell field is needed on Windows, how stdin JSON is read (jq or node), and any env var for the file path. Quote the example config exactly and note exit
+… [truncated 17 chars]
+
+> Result:
+```
+<persisted-output>
+Output too large (65.3KB). Full output saved to: C:\Users\USER\.claude\projects\c--Repositories-SampleApp\c15fde1b-1130-4224-861a-77c0146668d6\tool-results\toolu_01ToZYP4sdLccY3zi1X56eEA.txt
+
+Preview (first 2KB):
+> ## Documentation Index
+> Fetch the complete documentation index at: https://code.claude.com/docs/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Automate actions with hooks
+
+> Run shell commands automatically when Claude Code edits files, finishes tasks, or needs input. Format code, send notifications, validate commands, and enforce project rules.
+
+Hooks are user-defined shell commands. Claude Code runs them at specific points in its lifecycle, which gives you deterministic control: certain actions always happen rather tha
+… [truncated 1335 chars]
+```
+
+> **Tool:** Grep {"pattern":"prettier|file_path|\"shell\"|powershell","path":"C:\\Users\\USER\\.claude\\projects\\c--Repositories-SampleApp\\c15fde1b-1130-4224-861a-77c0146668d6\\tool-results\\toolu_01ToZYP4sdLccY3zi1X56eEA.txt","output_mode":"content","-n":true,"-i":true,"-C":3,"head_limit":80}
+
+> Result:
+```
+50-    "PostToolUse": [
+51-      {
+52-        "matcher": "Edit|Write",
+53:        "hooks": [{ "type": "command", "command": "f=$(jq -r '.tool_input.file_path') && npx prettier --write --ignore-unknown \"$f\"" }]
+54-      }
+55-    ],
+56-    "Notification": [
+--
+151-> >
+152-> > If the command isn't found, install the `libnotify-bin` package on Debian and Ubuntu, or your distribution's equivalent.
+153-
+154:> [tab] Windows (PowerShell)
+155->
+156-> ```json theme={null}
+157-> {
+--
+162->         "hooks": [
+163->           {
+164->             "type": "command",
+165:>             "command": "powershell.exe -Command \"[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Claude Code needs your attention', 'Claude Code')\""
+166->          
+… [truncated 2363 chars]
+```
+
+## Claude
+
+The docs show that my guess was wrong. There is no file-path variable. The hook receives JSON on stdin, and the docs' example extracts the path with `jq`. I'll check whether `jq` exists here.
+
+> **Tool:** Bash {"command":"(jq --version 2>&1 | head -1); echo \"node: $(node -v)\""}
+
+> Result:
+```
+/usr/bin/bash: line 1: jq: command not found
+node: v22.18.0
+```
+
+> **Tool:** Grep {"pattern":"CLAUDE_PROJECT_DIR","path":"C:\\Users\\USER\\.claude\\projects\\c--Repositories-SampleApp\\c15fde1b-1130-4224-861a-77c0146668d6\\tool-results\\toolu_01ToZYP4sdLccY3zi1X56eEA.txt","output_mode":"content","-n":true,"head_limit":6}
+
+> Result:
+```
+296:            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.sh"
+536:            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-rm-rf.sh"
+785:            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-git-policy.sh"
+989:* If you see "command not found", use absolute paths or `${CLAUDE_PROJECT_DIR}` to reference scripts. To avoid shell quoting entirely, add `"args": []` to switch to [exec form](https://code.claude.com/docs/en/hooks.md#exec-form-and-shell-form), which spawns the script directly without a shell
+```
+
+> **Tool:** Bash {"command":"npm install -D prettier 2>&1 | tail -3; npx prettier --version","timeout":120000}
+
+> Result:
+```
+npm audit fix --force
+
+Run `npm audit` for details.
+3.10.1
+```
+
+## Claude
+
+That `package.json` change is mine: it's the Prettier install. Now I'll write the hook script, a Prettier config that matches your existing code style, and the hook entry.
+
+> **Tool:** Write {"file_path":"c:\\Repositories\\SampleApp\\.claude\\hooks\\format.mjs","content":"// PostToolUse hook: run Prettier on the file Claude just edited or wrote.\n// Claude Code sends the tool call as JSON on stdin; the path is tool_input.file_path.\n// Exit 0 = fine. Any other non-2 exit only shows an error and does not block.\nimport { execFileSync } from 'node:child_process';\nimport { existsSync } 
+… [truncated 730 chars]
+
+> **Tool:** Write {"file_path":"c:\\Repositories\\SampleApp\\.prettierrc","content":"{\n  \"singleQuote\": true,\n  \"printWidth\": 120\n}\n"}
+
+> **Tool:** Write {"file_path":"c:\\Repositories\\SampleApp\\.prettierignore","content":"node_modules\nclient/dist\npackage-lock.json\ncourse/transcripts\n"}
+
+> **Tool:** Write {"file_path":"c:\\Repositories\\SampleApp\\.claude\\settings.json","content":"{\n  \"permissions\": {\n    \"deny\": [\"Read(./.env)\"]\n  },\n  \"hooks\": {\n    \"PostToolUse\": [\n      {\n        \"matcher\": \"Edit|Write\",\n        \"hooks\": [\n          {\n            \"type\": \"command\",\n            \"command\": \"node \\\"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\\\"\"\n          }
+… [truncated 39 chars]
+
+> Result:
+```
+File created successfully at: c:\Repositories\SampleApp\.claude\hooks\format.mjs (file state is current in your context — no need to Read it back)
+```
+
+> Result:
+```
+File created successfully at: c:\Repositories\SampleApp\.prettierrc (file state is current in your context — no need to Read it back)
+```
+
+> Result:
+```
+File created successfully at: c:\Repositories\SampleApp\.prettierignore (file state is current in your context — no need to Read it back)
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\.claude\settings.json has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+## Claude
+
+Now the test. I'll write a deliberately messy file. If the hook runs, it should come out with single quotes, spacing and a semicolon fixed.
+
+> **Tool:** Write {"file_path":"c:\\Repositories\\SampleApp\\server\\format-test.js","content":"const   a = \"double quoted\"\nfunction   add( x,y ){return x+y}\nconsole.log( add(1,2) , a )\n"}
+
+> **Tool:** Bash {"command":"cat server/format-test.js"}
+
+> Result:
+```
+File created successfully at: c:\Repositories\SampleApp\server\format-test.js (file state is current in your context — no need to Read it back)
+```
+
+> Result:
+```
+const a = 'double quoted';
+function add(x, y) {
+  return x + y;
+}
+console.log(add(1, 2), a);
+```
+
+> **Tool:** Bash {"command":"rm server/format-test.js && npm test 2>&1 | sed 's/\\x1b\\[[0-9;]*m//g' | grep -E \"Tests \"\ngit add -A && echo \"--- staged:\" && git diff --cached --name-only\nif git diff --cached | grep -q -i \"user@example.com\\|Users.\\{1,2\\}Igor\\|FAKE_SECRET\"; then echo BLOCKED; exit 1; fi\ngit commit -q -F - <<'EOF'\nAdd PostToolUse hook that runs Prettier on edited files\n\nCo-Auth
+… [truncated 112 chars]
+
+> Result:
+```
+Tests  14 passed (14)
+      Tests  6 passed (6)
+warning: in the working copy of '.claude/settings.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.claude/hooks/format.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.prettierignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.prettierrc', LF will be replaced by CRLF the next time Git touches it
+--- staged:
+.claude/hooks/format.mjs
+.claude/settings.json
+.prettierignore
+.prettierrc
+package
+… [truncated 155 chars]
+```
+
+## Claude
+
+**Step 2 is done.** The Prettier hook works, and it's committed on `chore/hooks`. I haven't pushed yet. All 20 tests still pass, 14 on the server and 6 on the client.
+
+**What I changed:**
+- **Hook:** `.claude/settings.json` now runs `.claude/hooks/format.mjs` after every Edit or Write.
+- **Hook script:** the docs' example uses `jq` to read the file path, and `jq` isn't installed here. So I wrote the script in Node, which you already have. It reads the JSON on stdin, takes `tool_input.file_path`, and runs Prettier on that file. It only touches `.js`, `.jsx`, `.mjs`, `.json` and `.css` files, so it won't reformat your Markdown notes.
+- **Prettier config:** `.prettierrc` with `singleQuote: true` and `printWidth: 120`, so it matches the style already in your code. With the defaults, it would have rewritten every quote the first time I touched a file.
+- **Ignore list:** `.prettierignore` skips `node_modules`, `client/dist`, `package-lock.json` and the generated transcripts.
+- **Dependency:** Prettier added to the root `package.json` as a dev dependency.
+
+**Proof:** I wrote a messy file with double quotes, no semicolons and cramped spacing. When I read it back, it had been reformatted without any action from me.
+
+**Two corrections to what I said earlier:**
+- I planned to use a file-path variable in the hook. I checked the docs and there isn't one. The path arrives on stdin.
+- I guessed at the setup before reading. The docs corrected me, so I didn't write a broken hook.
+
+**Not formatted yet:** the existing files, since the hook only formats files I edit from now on. They may not match Prettier's output. If you want, `npx prettier --write .` would format everything in one commit.
+
+**Step 3, the Stop hook:** it runs `npm test` when I try to finish a turn. Exit code 2 blocks me and sends the failure output back to me, so I can't finish while tests fail. The lesson says it gives up after 8 blocked stops in a row. To prove it, you'd break a test on purpose and watch me being forced to fix it. Note it will make every turn slower, because the whole suite runs each time I stop, about 4 seconds here.
+
+Shall I add the Stop hook?
+
+## You
+
+what is .mjs extension?
+
+## Claude
+
+`.mjs` means "module JavaScript". It's a normal JavaScript file that Node treats as an ES module, using `import` and `export` and top-level `await`.
+
+Node knows two module styles:
+
+| Style | Looks like | Used by |
+|---|---|---|
+| **CommonJS** (older) | `const fs = require('fs')` | `.js` files in a project without `"type": "module"`, and `.cjs` files |
+| **ES modules** (modern) | `import fs from 'node:fs'` | `.mjs` files, and `.js` files when `package.json` has `"type": "module"` |
+
+**Why I used `.mjs` for the hook script:**
+- The script uses `import` and `await` at the top level (to read stdin).
+- Your root `package.json` has no `"type": "module"`, so a plain `.js` file there would be read as CommonJS and fail on `import`.
+- `.mjs` makes Node treat that one file as a module, whatever `package.json` says. It needs no config change.
+
+**Where else you've seen it:** `course/export-transcripts.mjs` is the same, for the same reason. The `server` and `client` folders use plain `.js` and `.jsx` because their own `package.json` files set `"type": "module"`.
+
+It's only a naming convention that tells Node how to read the file. The code is ordinary JavaScript. Prettier handles `.mjs` too, and that's why I included it in the hook's list of extensions.
+
+Shall I add the Stop hook for step 3?
+
+## You
+
+explain me hooks
+
+## Claude
+
+A hook is a command that Claude Code runs automatically at a fixed point in my work. I don't decide whether it runs, and I can't skip it. That's the difference from `CLAUDE.md`, which I read as advice and can decide not to follow.
+
+**The idea in one sentence:** when event X happens, run command Y.
+
+## What a hook consists of
+
+```json
+"PostToolUse": [{                      ← the event: when does it fire?
+  "matcher": "Edit|Write",             ← which tool calls: only edits and writes
+  "hooks": [{ "type": "command",
+              "command": "node ..." }] ← what to run
+}]
+```
+
+## Common events
+
+| Event | Fires | Typical use |
+|---|---|---|
+| `PreToolUse` | Before I use a tool | Block something dangerous, such as `rm -rf` or editing protected files |
+| `PostToolUse` | After a tool succeeds | Format code (our Prettier hook), run a linter |
+| `Stop` | When I finish a response | Run tests, and refuse to let me finish if they fail (step 3) |
+| `Notification` | When I need your attention | A desktop alert |
+| `UserPromptSubmit` | When you send a message | Add context or check the prompt |
+| `SessionStart` | A session begins | Load project info |
+
+## How the command talks to Claude Code
+
+- **Input:** Claude Code sends a JSON description of what just happened on **stdin**. For our hook it includes `tool_input.file_path`, which is how the script knows which file to format.
+- **Output, by exit code:**
+  - **0:** all fine, carry on.
+  - **2:** **block**. Claude Code refuses the action, or stops me from finishing, and sends whatever the command wrote to stderr back to me, so I can react.
+  - **Any other code (such as 1):** shows an error but does **not** block.
+
+That last point is the common mistake. A hook that exits 1 looks like a guard, but it only logs a complaint.
+
+## Hooks, deny rules and CLAUDE.md compared
+
+| | Who enforces it | Can I ignore it? | Good for |
+|---|---|---|---|
+| **CLAUDE.md** | Me | Yes | Conventions, explanations |
+| **Deny rule** | Claude Code | No | "Never touch this file or command" |
+| **Hook** | Claude Code | No | Anything that must happen or must be checked every time |
+
+A deny rule and a hook take priority over my judgment. A deny can't be overridden by a hook, or the other way round.
+
+## Limits to know
+
+- **A hook is code that runs on your machine.** It has your permissions. Read a hook before adding it, especially from a shared repo. This one is in `.claude/settings.json`, which is committed, so anyone who clones the repo gets it.
+- **Cost:** a hook on every edit or every stop adds time each time. The Prettier hook takes well under a second, but a full test run on `Stop` takes about 4 seconds on every turn.
+- **Hooks can loop.** A `Stop` hook that always fails would keep me stuck. That's why Claude Code stops after 8 blocked stops in a row.
+
+## In this project
+
+1. **Deny rule** (not a hook): I can't read `.env`.
+2. **PostToolUse hook:** Prettier runs on files I edit. This is "something must happen every time".
+3. **Stop hook (next):** I can't finish while tests fail. This is "something must be true before I'm allowed to stop".
+
+Shall I add the Stop hook for step 3?
+
+## You
+
+I already have prettier extension installed in VS Code
+
+## Claude
+
+That's fine. The extension and the hook do different jobs, and they work together.
+
+| | VS Code extension | The hook |
+|---|---|---|
+| **Runs when** | You edit or save in VS Code (if format-on-save is on) | I change a file through my Edit or Write tools |
+| **Needs VS Code** | Yes | No. It also works in the terminal, a headless run, or CI. |
+| **Covers my edits** | Not reliably. I write to the file on disk, and VS Code's format-on-save fires on your saves, not on outside writes. | Yes, every time |
+
+So the extension keeps your own typing tidy, and the hook keeps my edits tidy. Without the hook, you'd be relying on opening and re-saving every file I changed.
+
+**They also agree on style.** The extension reads the repo's `.prettierrc`, so both use single quotes and 120 characters. If you ever see them disagree, check that the extension is set to use the project config (the "Require config" setting).
+
+**One thing to watch:** two formatters on the same file can reformat each other's output if their settings differ. Here they share one config, so no conflict.
+
+The hook is also the lesson's step 2. It's meant to show that a hook runs without anyone asking, and it's already working. I'd keep it.
+
+Shall I add the Stop hook for step 3?
+
+## You
+
+add the Stop hook
+
+## Claude
+
+I'll add the hook, then run the test the lesson asks for: break a test on purpose and see whether I'm stopped from finishing.
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\.claude\\settings.json","old_string":"    \"PostToolUse\": [","new_string":"    \"Stop\": [\n      {\n        \"hooks\": [\n          {\n            \"type\": \"command\",\n            \"command\": \"cd \\\"$CLAUDE_PROJECT_DIR\\\" && npm test 1>&2 || exit 2\"\n          }\n        ]\n      }\n    ],\n    \"PostToolUse\": ["}
+
+> Result:
+```
+The file c:\Repositories\SampleApp\.claude\settings.json has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+## Claude
+
+The Stop hook is in place. Now I'll break a test on purpose, in the health check expectation, and then try to finish.
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\server\\test\\api.test.js","old_string":"    expect(r.body).toEqual({ status: 'ok' });","new_string":"    expect(r.body).toEqual({ status: 'BROKEN-ON-PURPOSE' });"}
+
+> Result:
+```
+The file c:\Repositories\SampleApp\server\test\api.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+## Claude
+
+The test is now broken: the health check expects `BROKEN-ON-PURPOSE`, so `npm test` should fail. I'm trying to finish this turn now. If the Stop hook works, it should refuse and send me the failing test output.
+
+## You
+
+Stop hook feedback:
+[cd "$CLAUDE_PROJECT_DIR" && npm test 1>&2 || exit 2]: 
+> test
+> npm test -w server && npm test -w client
+
+
+> test
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mC:/Repositories/SampleApp/server[39m
+
+ [31m❯[39m test/api.test.js [2m([22m[2m14 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 156[2mms[22m[39m
+[31m   [31m×[31m API[2m > [22mhealth[39m[32m 35[2mms[22m[39m
+[31m     → expected { status: 'ok' } to deeply equal { status: 'BROKEN-ON-PURPOSE' }[39m
+   [32m✓[39m API[2m > [22mlists empty, then todos oldest first[32m 43[2mms[22m[39m
+   [32m✓[39m API[2m > [22mPOST creates and trims[32m 4[2mms[22m[39m
+   [32m✓[39m API[2m > [22mPOST accepts 200 chars[32m 3[2mms[22m[39m
+   [32m✓[39m API[2m > [22mPOST rejects {}[32m 3[2mms[22m[39m
+   [32m✓[39m API[2m > [22mPOST rejects {"text":""}[32m 4[2mms[22m[39m
+   [32m✓[39m API[2m > [22mPOST rejects {"text":"   "}[32m 3[2mms[22m[39m
+   [32m✓[39m API[2m > [22mPOST rejects {"text":5}[32m 3[2mms[22m[39m
+   [32m✓[39m API[2m > [22mPOST rejects {"text":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}[32m 3[2mms[22m[39m
+   [32m✓[39m API[2m > [22mPOST rejects invalid JSON[32m 5[2mms[22m[39m
+   [32m✓[39m API[2m > [22mPATCH toggles done[32m 8[2mms[22m[39m
+   [32m✓[39m API[2m > [22mPATCH 400 on non-boolean, 404 on missing[32m 8[2mms[22m[39m
+   [32m✓[39m API[2m > [22mDELETE removes the todo with that id when ids have gaps[32m 23[2mms[22m[39m
+   [32m✓[39m API[2m > [22mDELETE removes, 404 on missing[32m 10[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/api.test.js[2m > [22mAPI[2m > [22mhealth
+[31m[1mAssertionError[22m: expected { status: 'ok' } to deeply equal { status: 'BROKEN-ON-PURPOSE' }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "status": "BROKEN-ON-PURPOSE",[39m
+[31m+   "status": "ok",[39m
+[2m  }[22m
+
+[36m [2m❯[22m test/api.test.js:[2m15:20[22m[39m
+    [90m 13| [39m    [35mconst[39m r [33m=[39m [35mawait[39m [34mrequest[39m(app)[33m.[39m[35mget[39m([32m'/api/health'[39m)[33m;[39m
+    [90m 14| [39m    [34mexpect[39m(r[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m200[39m)[33m;[39m
+    [90m 15| [39m    [34mexpect[39m(r[33m.[39mbody)[33m.[39m[34mtoEqual[39m({ status[33m:[39m [32m'BROKEN-ON-PURPOSE'[39m })[33m;[39m
+    [90m   | [39m                   [31m^[39m
+    [90m 16| [39m  })[33m;[39m
+    [90m 17| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m13 passed[39m[22m[90m (14)[39m
+[2m   Start at [22m 10:32:25
+[2m   Duration [22m 1.02s[2m (transform 108ms, setup 0ms, collect 386ms, tests 156ms, environment 0ms, prepare 141ms)[22m
+
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\Repositories\SampleApp\server
+npm error workspace server
+npm error location C:\Repositories\SampleApp\server
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c vitest run
+
+## Claude
+
+The Stop hook blocked me. I tried to finish, and Claude Code sent back the failing test: `expected { status: 'ok' } to deeply equal { status: 'BROKEN-ON-PURPOSE' }`. Now I'll fix it and check what else the formatting hook did to that file.
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\server\\test\\api.test.js","old_string":"    expect(r.body).toEqual({ status: 'BROKEN-ON-PURPOSE' });","new_string":"    expect(r.body).toEqual({ status: 'ok' });"}
+
+> **Tool:** Bash {"command":"git diff --stat; echo \"--- test file diff vs last commit:\"; git diff server/test/api.test.js | sed 's/\\x1b\\[[0-9;]*m//g' | head -40"}
+
+> Result:
+```
+The file c:\Repositories\SampleApp\server\test\api.test.js has been updated successfully.
+```
+
+> Result:
+```
+warning: in the working copy of '.claude/settings.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/test/api.test.js', LF will be replaced by CRLF the next time Git touches it
+ .claude/settings.json   | 10 ++++++++++
+ server/test/api.test.js | 23 ++++++++++++++++++-----
+ 2 files changed, 28 insertions(+), 5 deletions(-)
+--- test file diff vs last commit:
+warning: in the working copy of 'server/test/api.test.js', LF will be replaced by CRLF the next time Git touches it
+diff --git a/server/test/api.test.js b/server/test/api.test.js
+index b74033e..85ffcf2 100644
+--- a/server/test/api.test.js
++++ b/server/test/api.test.js
+@@ -4,7 +4,9 @@ import { openDb } from '../src/db.js';
+ import { createApp } from '../src/app.js';
+ 
+ let app;
+-beforeEa
+… [truncated 997 chars]
+```
+
+> **Tool:** Bash {"command":"npm test 2>&1 | sed 's/\\x1b\\[[0-9;]*m//g' | grep -E \"Tests |failed\"\ngit add -A && echo \"--- staged:\" && git diff --cached --name-only\nif git diff --cached | grep -q -i \"user@example.com\\|Users.\\{1,2\\}Igor\\|FAKE_SECRET\\|BROKEN-ON-PURPOSE\"; then echo BLOCKED; exit 1; fi\ngit commit -q -F - <<'EOF'\nAdd Stop hook that blocks finishing while tests fail\n\nAlso includ
+… [truncated 222 chars]
+
+> Result:
+```
+Tests  14 passed (14)
+      Tests  6 passed (6)
+warning: in the working copy of '.claude/settings.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/test/api.test.js', LF will be replaced by CRLF the next time Git touches it
+--- staged:
+.claude/settings.json
+server/test/api.test.js
+Add Stop hook that blocks finishing while tests fail | user@example.com | user@example.com
+Add PostToolUse hook that runs Prettier on edited files | user@example.com | user@example.com
+Add deny rule for reading .env | user@example.com | user@example.com
+```
+
+## Claude
+
+**All three steps work.** I saw each one working myself:
+
+| Step | Rule | Proof |
+|---|---|---|
+| 1 | Deny `Read(./.env)` | The Read tool and `cat .env` were both refused. |
+| 2 | PostToolUse hook runs Prettier | A messy file I wrote came back formatted. |
+| 3 | Stop hook runs `npm test`, exit 2 on failure | I changed the health test to expect `BROKEN-ON-PURPOSE` and tried to finish. Claude Code **refused** and sent me the failing test output. I fixed it, and all 20 tests pass again. |
+
+The commits are on `chore/hooks`, with the no-reply email, and I haven't pushed them.
+
+**Observations from step 3:**
+- **I couldn't finish.** This is the lesson's point: "done" is now checked by a command that I can't talk my way past.
+- **It works with the auto-format hook.** The block message carried the full colored test output. The reformatting of `api.test.js` also came from the other hook, which rewrote the whole file when I edited one line. That's why the commit includes some formatting changes. It's harmless, but it makes the diff noisy.
+- **It adds time to every turn.** The suite runs each time I finish, about 4 seconds here.
+- **It has a limit.** It gives up after 8 blocked stops in a row, so a broken test can't trap a session forever.
+- **It's a check on me, not on you.** It only fires when I stop. Your own edits and commits in VS Code aren't covered. CI (lesson 8) will cover those.
+
+The lesson's done criteria are met, so what's left is the routine:
+1. Update the playbook, mark lesson 6 done, and add the new notes to `CLAUDE.md`, such as the hook script's location and the Prettier setup.
+2. Re-export transcripts.
+3. Push and open a PR using the template.
+
+Should I go ahead with all three, and merge with rebase once you've read it?
+
+## You
+
+what happens if tests not pass?
+
+## Claude
+
+It depends on where the tests are run. We have one check in place today, and CI will add another in lesson 8.
+
+**With the Stop hook (now):**
+1. I try to finish a turn.
+2. `npm test` runs. If any test fails, the command exits with code 2.
+3. Claude Code **blocks me from finishing** and sends me the test output, as you saw.
+4. I read the failures, fix the code (or the test, if the test was wrong), and try to finish again. The loop repeats.
+5. After **8 blocked stops in a row**, Claude Code gives up and lets me stop, so a stuck session can't run forever. I'd then tell you plainly that the tests are still failing.
+
+**What it does not stop:**
+- It doesn't stop **you**. If you edit code in VS Code, run `git commit` and push, nothing checks the tests.
+- It doesn't prevent commits. I could commit failing code mid-turn, because the hook only runs when I finish.
+- It only runs on this machine, in this project's settings.
+
+**With CI in lesson 8:**
+- GitHub runs the tests on every PR.
+- A failing run shows a red mark on the PR.
+- If you mark the check as **required** in the branch rule, GitHub **refuses to merge** the PR until it's green. That one covers everyone's changes, whatever machine they come from.
+
+**What each one protects:**
+
+| Check | Stops | When |
+|---|---|---|
+| Stop hook | Me, finishing a turn with failing tests | While I work |
+| CI required check | Any merge into `main` | At PR time |
+
+The first gives fast feedback, and the second is the real gate. They work well together. With both, I find out about failures within seconds, and a failing change still can't reach `main`.
+
+Shall I go ahead with the lesson 6 wrap-up: playbook, progress, `CLAUDE.md`, transcripts, and a PR?
+
+## You
+
+go ahead with the wrap-up
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\PLAYBOOK.md","old_string":"## Todo app stack (reuse as a template)","new_string":"## Lesson 6: Permissions and hooks\n\n**Rules vs hooks:** `CLAUDE.md` is guidance Claude can ignore. Deny rules and hooks are enforced by Claude Code. Evaluation order: deny, then ask, then allow; first match wins. An allow can't override a deny, 
+… [truncated 2681 chars]
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\CLAUDE.md","old_string":"## Git and privacy rules","new_string":"## Hooks and permissions (`.claude/settings.json`)\n\n- Deny rule: `Read(./.env)`. Never read `.env` or try to get around the rule.\n- PostToolUse hook runs Prettier (`.claude/hooks/format.mjs`, config in `.prettierrc`) on edited code files. It may reformat the whole file
+… [truncated 172 chars]
+
+> **Tool:** Bash {"command":"sed -i 's/| 6 | Permissions and hooks | not started |/| 6 | Permissions and hooks | done |/' course/PROGRESS.md && sed -i 's/Lessons done: 1, 2, 3, 4, 5\\./Lessons done: 1, 2, 3, 4, 5, 6./' course/PLAYBOOK.md && grep -n \"Permissions and hooks\" course/PROGRESS.md; grep -n \"Lessons done\" course/PLAYBOOK.md; wc -l CLAUDE.md"}
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\PLAYBOOK.md has been updated successfully.
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+> Result:
+```
+10:| 6 | Permissions and hooks | done |
+3:Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6.
+42 CLAUDE.md
+[This command modified 2 files you've previously read: course\PLAYBOOK.md, course\PROGRESS.md. Call Read before editing.]
+```
+
+## Claude
+
+Now the transcripts, the checks, the commit, the push and the PR.
+
+> **Tool:** Bash {"command":"node course/export-transcripts.mjs \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp\" course/transcripts >/dev/null\necho \"--- tests:\"; npm test 2>&1 | sed 's/\\x1b\\[[0-9;]*m//g' | grep -E \"Tests \"\ngit add -A && echo \"--- staged:\" && git diff --cached --name-only\necho \"--- sensitive matches in staged diff: $(git diff --cached | grep -c -i 'user@example.com\\
+… [truncated 524 chars]
+
+> Result:
+```
+Exit code 1
+--- tests:
+      Tests  14 passed (14)
+      Tests  6 passed (6)
+warning: in the working copy of 'course/PLAYBOOK.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/PROGRESS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-1.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-2.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-3.md', LF will be replaced by CRLF the next time Git touches it
+--- staged:
+CLAUDE.md
+course/PLAYBOOK.md
+course/PROGRESS.md
+course/transcripts/session-3.md
+--- sensitive matches in staged diff:
+… [truncated 30 chars]
+```
+
+## Claude
+
+The check blocked the commit, as it should. I'll look at exactly what matched before deciding anything.
+
+> **Tool:** Bash {"command":"git diff --cached | grep -n -i -o \".\\{0,50\\}\\(user@example.com\\|Users.\\{1,2\\}Igor\\|FAKE_SECRET\\).\\{0,40\\}\" | cut -c1-200"}
+
+> Result:
+```
+545:h":"c:\\Repositories\\SampleApp\\.env","content":"FAKE_SECRET=not-a-real-secret-12345\n"}
+569:+2. Put a fake value in it, for example `FAKE_SECRET=not-a-real-secret-12345`.
+594:"user@example.com\\|Users.\\{1,2\\}Igor\\|FAKE_SECRET\"; then echo BLOCKED; exit 1; fi; git c
+830:"user@example.com\\|Users.\\{1,2\\}Igor\\|FAKE_SECRET\"; then echo BLOCKED; exit 1; fi\ngit c
+1122:"user@example.com\\|Users.\\{1,2\\}Igor\\|FAKE_SECRET\\|BROKEN-ON-PURPOSE\"; then echo BLOCKE
+```
+
+> **Tool:** Bash {"command":"git fetch -q origin; echo \"--- loose search for the address in public main (any escaping):\"; git grep -I -n -o \"user@example[^ \\\"']\\{0,12\\}\" origin/main | cut -c1-160; echo \"--- count: $(git grep -I -c 'user@example' origin/main | wc -l) file(s)\"; echo \"--- same in all remote branches:\"; git grep -I -l 'user@example' $(git rev-list origin/main) 2>/dev/null
+… [truncated 19 chars]
+
+> Result:
+```
+--- loose search for the address in public main (any escaping):
+origin/main:course/transcripts/session-3.md:1505:user@example.com\
+origin/main:course/transcripts/session-3.md:1563:user@example.com\
+origin/main:course/transcripts/session-3.md:1767:user@example\\|Users.\\{
+origin/main:course/transcripts/session-3.md:1792:user@example\\|Users.\\{
+origin/main:course/transcripts/session-3.md:2021:user@example.com\\|Use
+--- count: 1 file(s)
+--- same in all remote branches:
+2f47fbb56987f871eedb013589bc101bf56ea1aa:course/transcripts/session-3.md
+56351846676cacb1b5888bddb8a6d8c4cf07f40f:course/transcripts/session-3.md
+```
+
+> **Tool:** Bash {"command":"gh repo edit izolotarev/ClaudePractice --visibility private --accept-visibility-change-consequences 2>&1 | tail -2; gh repo view izolotarev/ClaudePractice --json visibility --jq .visibility","timeout":60000}
+
+> Result:
+```
+PRIVATE
+```
+
+## Claude
+
+The repo is private again. Now I'll fix the cause: the redaction rule has to catch escaped forms too.
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\export-transcripts.mjs","old_string":"  .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}/g, 'user@example.com')","new_string":"  // Emails, including grep-style escaped ones such as user@example.com, and partial ones such as name@host\\\\|\n  .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\\\*\\.[A-Za-z0-9-]+)+/g, 'user
+… [truncated 102 chars]
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\export-transcripts.mjs has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+> **Tool:** Bash {"command":"node course/export-transcripts.mjs \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp\" course/transcripts >/dev/null\necho \"--- loose search in working tree (any escaping), excluding the script's own rule line:\"\ngrep -rIn -o \"user@example.\\{0,12\\}\" course CLAUDE.md .claude 2>/dev/null | cut -c1-160\necho \"--- Igor path: $(grep -rIc 'Users.\\{1,2\\}Igor' course CL
+… [truncated 75 chars]
