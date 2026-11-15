@@ -820,3 +820,118 @@ The file c:\Repositories\SampleApp\course\export-transcripts.mjs has been update
 
 > **Tool:** Bash {"command":"node course/export-transcripts.mjs /c/Users/USER/.claude/projects/c--Repositories-SampleApp course/transcripts >/dev/null && git add -A course && echo \"--- remaining local@fragment (excluding noreply/example):\" && git diff --cached -U0 | grep '^+' | grep -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.\\\\-]*' | sort | uniq -c | grep -vE 'noreply|example' ; echo \"--- Igor/hotmail address checks:\
 … [truncated 162 chars]
+
+> Result:
+```
+warning: in the working copy of 'course/export-transcripts.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-1.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-2.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-3.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-4.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-5.md', LF will be replaced by CRLF the next time Git touches it
+--- remaining local@fragment (excluding noreply/example):
+
+… [truncated 385 chars]
+```
+
+> **Tool:** Bash {"command":"git diff --cached -U0 | grep '^+' | grep -oE '.{0,40}izolotarev@.{0,25}' | grep -v noreply"}
+
+> Result:
+```
+p '^+' | sed -n '188p' | grep -oE '.{30}izolotarev@.{30}'"}
+^+' | sed -n '188p' | grep -oE '.{0,30}(izolotarev@|@[a-z]*hotmail).{0,30}'"
+```
+
+> **Tool:** Bash {"command":"git commit -q -m \"Add lesson 7 notes, redact truncated email fragments, refresh transcripts\n\nCo-Authored-By: Claude Sonnet 5.5 <user@example.com>\" && git log -1 --format='%h %s | %ae %ce' && git push -q -u origin docs/lesson-7-notes 2>&1 | tail -1; gh pr create --base main --head docs/lesson-7-notes --title \"Lesson 7: subagents and review notes\" --body \"$(cat <<'EOF'\n## Su
+… [truncated 1568 chars]
+
+> Result:
+```
+852473d Add lesson 7 notes, redact truncated email fragments, refresh transcripts | user@example.com user@example.com
+remote: 
+https://github.com/izolotarev/ClaudePractice/pull/4
+```
+
+## Claude
+
+Lesson 7 is written up and PR #4 is open: https://github.com/izolotarev/ClaudePractice/pull/4. I haven't merged it.
+
+**What's in it**
+- **Progress:** lesson 7 is marked done in `course/PROGRESS.md`.
+- **Playbook:** `course/PLAYBOOK.md` has a new lesson 7 section. It covers the four steps and these gotchas:
+  - agent files only load at session start;
+  - a read-only reviewer can't run tests;
+  - `git branch --merged` misses rebase-merged branches, so use `git cherry` or `gh pr list`;
+  - `--delete-branch` plus `git fetch --prune` clears stale refs.
+- **Transcripts:** re-exported with the script. Sessions 4 and 5 are new and session 3 is refreshed.
+
+**Privacy**
+- **Redaction fix:** the export clips long commands at 400 characters, which left a fragment of the real address in one transcript line (`user@example`). I added a redaction rule for cut-off fragments like that to `course/export-transcripts.mjs` and re-exported.
+- **Checks on the added lines:** no full real address and no `Users\<name>` path.
+- **What still appears:** the public username followed by `@` in two of my own grep commands, plus noreply and example addresses.
+- **Commit:** author and committer are both the no-reply address.
+
+Since the repo is public, you may want to look at the transcript diff before I merge it with rebase. Do you want me to merge now?
+
+## You
+
+merge it with rebase
+
+> **Tool:** Bash {"command":"gh pr merge 4 --rebase --delete-branch 2>&1 | tail -2; gh pr view 4 --json state -q .state; git switch -q main && git pull -q --ff-only; git fetch -q --prune; git log -1 --format='%h %s | %ae %ce'; git branch -a; echo \"--- GitHub side:\"; gh api repos/izolotarev/ClaudePractice/commits/main --jq '.commit.author.email + \" \" + .commit.committer.email'"}
+
+> Result:
+```
+create mode 100644 course/transcripts/session-4.md
+ create mode 100644 course/transcripts/session-5.md
+MERGED
+ecd3a78 Add lesson 7 notes, redact truncated email fragments, refresh transcripts | user@example.com user@example.com
+* main
+  remotes/origin/main
+--- GitHub side:
+user@example.com user@example.com
+```
+
+## Claude
+
+PR #4 is merged into `main` with rebase, and lesson 7 is done.
+
+- **Commit:** `ecd3a78` is on `main`, and your local `main` is up to date.
+- **Emails:** GitHub's side of the commit shows only the two no-reply addresses, with no real email.
+- **Branches:** the branch is deleted locally and on the remote. The repo has only `main`.
+
+Lesson 8 is next, GitHub Actions with Claude. It starts with a `ci.yml` that runs `npm ci` and `npm test` on pull requests, then adds the `@claude` GitHub app. The app step needs you to run `/install-github-app` and store a secret. Because the repo is public, I'd check the secret and permissions setup with you before anything is installed. Do you want to start lesson 8 now, or save that for a fresh session?
+
+## You
+
+first explain me that from prev lesson: git branch --merged misses rebase-merged branches, so use git cherry or gh pr list;
+
+## Claude
+
+**What `git branch --merged` does**
+
+`git branch --merged main` lists branches whose tip commit is an ancestor of `main`. In other words, the exact same commits (same hashes) are already in `main`'s history.
+
+**Why a rebase merge breaks that**
+
+A rebase merge replays your branch's commits on top of `main` and creates new commits with new hashes. Your branch commit and `main`'s copy have identical changes, but they are different commits.
+
+```
+branch:  A --- B        (hash 0eaa9d4)
+main:    ... --- B'     (hash 3fcdf08, same change, new hash)
+```
+
+Your branch tip `B` is not in `main`'s history, only `B'` is. So `git branch --merged` won't list the branch, even though its work is fully in `main`. A normal merge commit keeps the original hashes, so it works there. A squash merge has the same problem as rebase.
+
+Today this showed up. Several old branches were already merged by content, but a hash-based check would have called them unmerged, and deleting them blindly would have been a guess.
+
+**The two ways around it**
+
+- **`git cherry main <branch>`** compares commits by their patch content (the diff), not their hash. It prints one line per commit on the branch:
+  - `-` means an equivalent change is already in `main`.
+  - `+` means it isn't there yet.
+  
+  If there are no `+` lines, the branch is safe to delete. That's what I ran for each old branch. The empty "Redact personal data" commit showed `+` because it had no diff to match. I had to look at it by hand to confirm `main` already covered it.
+
+- **`gh pr list --state all --head <branch>`** asks GitHub whether a PR from that branch was merged. It's the most reliable check when the work went through a PR. It finds nothing for branches that never had a PR, which is why some showed an empty PR column.
+
+Use `git cherry` for a quick local check and `gh pr list` to confirm. If either one says merged, deleting the branch is safe.

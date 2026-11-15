@@ -1,6 +1,6 @@
 # Claude Code playbook
 
-Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6, 7.
+Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6, 7, 8.
 
 ## Lesson 1: Operate a session safely
 
@@ -154,6 +154,29 @@ Copy this file into any new project. Updated after each lesson. Lessons done: 1,
 - A reviewer's blind spot is its own claims: it said strikethrough was unverified because the CSS wasn't in the files it read. Treat "not checked" lines as follow-ups.
 - Rebase merges change commit hashes, so `git branch --merged` won't list merged branches. Compare with `git cherry main <branch>` (lines starting `-` are already in main) or check PR state with `gh pr list --state all --head <branch>`.
 - `gh pr merge <n> --rebase --delete-branch` also removes the local branch; run `git fetch --prune` afterwards to drop the stale remote ref.
+
+## Lesson 8: GitHub Actions with Claude
+
+**Goal:** CI gates every PR, and `@claude` works in GitHub.
+
+**Steps that worked:**
+
+1. `.github/workflows/ci.yml`: on `pull_request`, checkout, `setup-node` (Node 22, `cache: npm`), `npm ci`, `npm test`. Open the PR, let it run once.
+2. Branch rule on `main`: tick "Require status checks to pass", then search for `test` and add it. The list stays empty until the check has run once in the last 7 days. Save the rule (easy to miss at the bottom).
+3. `/install-github-app` is **not available in the VS Code extension**. Do it by hand: install the Claude app at github.com/apps/claude for this repo only, run `claude setup-token` in a normal terminal, store the result as the repo secret `CLAUDE_CODE_OAUTH_TOKEN`, and write `.github/workflows/claude.yml` using `anthropics/claude-code-action@v1`. Merge it.
+4. Create an issue and comment `@claude add input validation`. Claude pushes a `claude/issue-N-...` branch and comments a "Create PR" link; it did **not** open the PR itself. Review the diff against `SPEC.md`, open the PR, wait for CI, merge.
+5. Limits: `timeout-minutes: 15` on the job, `claude_args: --max-turns 8` on the action.
+
+**Facts and gotchas:**
+
+- **Workflows triggered by comments or issues run the file on `main`.** `@claude` did nothing until `claude.yml` was merged.
+- **A 401 hides behind a 2-second failure.** The run showed "Claude encountered an error after 2s", cost 0, no turns. Adding `show_full_output: true` revealed `authentication_failed` (401). The fix was re-entering the token through the GitHub web form, where the pasted value is visible. Remove `show_full_output` afterwards: full output puts more detail in the run log.
+- `gh secret list` shows only that a secret exists, not whether it is valid. Never paste a token into chat or a file.
+- Claude's own error comment triggers a second run that is "skipped". Harmless.
+- A workflow edit goes through a PR like everything else, and each PR needs the `test` check green before a rebase merge.
+- "Require branches to be up to date" means a second PR must be updated after the first merges. Good for correctness, slower for parallel work.
+- Commits by the action are authored by `claude[bot]` (no-reply address); rebase merging keeps the committer as your no-reply address too.
+- Only users with write access can trigger the action. Treat issue and comment text as untrusted input and keep permissions minimal.
 
 ## Todo app stack (reuse as a template)
 
