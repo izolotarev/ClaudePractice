@@ -4,7 +4,9 @@ import { openDb } from '../src/db.js';
 import { createApp } from '../src/app.js';
 
 let app;
-beforeEach(() => { app = createApp(openDb(':memory:')); });
+beforeEach(() => {
+  app = createApp(openDb(':memory:'));
+});
 
 describe('API', () => {
   it('health', async () => {
@@ -30,13 +32,21 @@ describe('API', () => {
   });
 
   it('POST accepts 200 chars', async () => {
-    expect((await request(app).post('/api/todos').send({ text: 'x'.repeat(200) })).status).toBe(201);
+    expect(
+      (
+        await request(app)
+          .post('/api/todos')
+          .send({ text: 'x'.repeat(200) })
+      ).status,
+    ).toBe(201);
   });
 
   it.each([[{}], [{ text: '' }], [{ text: '   ' }], [{ text: 5 }], [{ text: 'x'.repeat(201) }]])(
-    'POST rejects %j', async (body) => {
+    'POST rejects %j',
+    async (body) => {
       expect((await request(app).post('/api/todos').send(body)).status).toBe(400);
-    });
+    },
+  );
 
   it('POST rejects invalid JSON', async () => {
     const r = await request(app).post('/api/todos').set('Content-Type', 'application/json').send('{bad');
@@ -64,7 +74,10 @@ describe('API', () => {
     expect((await request(app).delete('/api/todos/1')).status).toBe(204);
     expect((await request(app).delete('/api/todos/3')).status).toBe(204);
     const r = await request(app).get('/api/todos');
-    expect(r.body.map((t) => [t.id, t.text])).toEqual([[2, 'b'], [4, 'd']]);
+    expect(r.body.map((t) => [t.id, t.text])).toEqual([
+      [2, 'b'],
+      [4, 'd'],
+    ]);
     expect((await request(app).delete('/api/todos/4')).status).toBe(204);
     expect((await request(app).delete('/api/todos/3')).status).toBe(404);
   });
