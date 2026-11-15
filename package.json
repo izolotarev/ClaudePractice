@@ -1,13 +1,21 @@
 {
   "name": "sample-todo-app",
   "private": true,
-  "workspaces": ["client", "server"],
-  "engines": { "node": ">=20" },
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "npm run build -w client",
     "start": "npm start -w server",
     "test": "npm test -w server && npm test -w client",
     "dev": "concurrently -n server,client \"npm run dev -w server\" \"npm run dev -w client\""
   },
-  "devDependencies": { "concurrently": "^9.0.0" }
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "prettier": "^3.10.1"
+  }
 }
