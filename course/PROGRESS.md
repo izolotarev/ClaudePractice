@@ -10,5 +10,5 @@
 | 6 | Permissions and hooks | done |
 | 7 | Subagents and review | done |
 | 8 | GitHub Actions with Claude | done |
-| 9 | Deploy | not started |
+| 9 | Deploy | done |
 | 10 | Headless, cost, wrap-up | not started |

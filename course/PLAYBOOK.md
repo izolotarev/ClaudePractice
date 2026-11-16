@@ -1,6 +1,6 @@
 # Claude Code playbook
 
-Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6, 7, 8.
+Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6, 7, 8, 9.
 
 ## Lesson 1: Operate a session safely
 
@@ -177,6 +177,31 @@ Copy this file into any new project. Updated after each lesson. Lessons done: 1,
 - "Require branches to be up to date" means a second PR must be updated after the first merges. Good for correctness, slower for parallel work.
 - Commits by the action are authored by `claude[bot]` (no-reply address); rebase merging keeps the committer as your no-reply address too.
 - Only users with write access can trigger the action. Treat issue and comment text as untrusted input and keep permissions minimal.
+
+## Lesson 9: Deploy
+
+**Goal:** `main` goes live through CI, not from your laptop.
+
+**Steps that worked:**
+
+1. Render: New Web Service from the GitHub repo. Build `npm ci && npm run build`, start `npm start`, health check path `/api/health`. **Turn Auto-Deploy off**, otherwise Render deploys every push itself and skips tests, approval and the smoke test.
+2. Copy the service's Deploy Hook (Render, Settings, Deploy Hook). Save it as the repo **secret** `RENDER_DEPLOY_HOOK` through the GitHub web form or `gh secret set`. Save the public URL as the **variable** `APP_URL` (no trailing slash). Secrets are write-only and masked in logs, variables are visible.
+3. GitHub: Settings, Environments, new environment `production`, tick Required reviewers and add yourself. Free for public repos.
+4. `.github/workflows/deploy.yml`: on push to `main` (and `workflow_dispatch`), job `test`, then job `deploy` with `needs: test` and `environment: production`. The deploy step posts to the hook with `&ref=$GITHUB_SHA` so the tested commit is deployed; the hook URL goes through an env var and is never echoed. `concurrency: deploy` with `cancel-in-progress: false` queues deploys instead of overlapping them.
+5. Smoke test step: retry every 15 seconds for 10 minutes, passing only when `/api/health` is ok, `/` contains `id="root"` and `/api/todos` returns a JSON array.
+6. Break and roll back: PR #13 changed `client/dist` to `client/distt` in `server/src/index.js`. Tests passed (`index.js` is not covered) and the deploy went green, but `/` returned 404. Rolled back with `git revert` on a branch, a PR, the usual `test` check, then approval of the second deploy.
+
+**Facts and gotchas:**
+
+- **Health-only smoke tests miss real outages.** With the break live, `/api/health` stayed 200 while the home page was dead, and the run was green. Check what users need: the page, a data route. Fixed in a follow-up PR.
+- **Pick a break that passes CI.** A broken health route fails the required `test` check and can never merge, so it can't demonstrate a bad deploy.
+- **A smoke test cannot tell old from new.** The previous version answers `/api/health` too, so attempt 1 can pass before the new build is live. An exact check needs the health route to report the build's commit (Render sets `RENDER_GIT_COMMIT`); that would change SPEC.md.
+- **Confirm the deployed commit in the Render dashboard** (Events or Deploys tab). Here it showed the commit that CI had tested.
+- **Roll back with a revert PR, not a dashboard redeploy.** A dashboard rollback bypasses git, so `main` keeps the bug and the next push redeploys it. A revert goes through the same gate.
+- Every merge to `main` triggers a deploy run that waits for approval, including docs-only PRs. Approve or reject it from the run page (Review deployments); a human decision is the point.
+- Auto mode blocks production deploys by default. Keep deploy credentials in GitHub Secrets, out of Claude's reach.
+- In Git Bash, `curl -w "/api/x %{http_code}"` labels can get a path prefix like `C:/Program Files/Git/`: MSYS rewrites strings that look like paths. The request itself is unaffected.
+- Actions `checkout@v4` and `setup-node@v4` currently warn about Node 20; bump the versions in a chore PR when needed.
 
 ## Todo app stack (reuse as a template)
 
