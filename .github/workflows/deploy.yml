@@ -46,13 +46,19 @@ jobs:
           APP_URL: ${{ vars.APP_URL }}
         run: |
           # Render needs a few minutes to build and restart, so retry for up to 10 minutes.
+          # Check the API health route AND the home page: a broken client build keeps /api/health green.
+          check() {
+            curl --fail --silent --show-error --max-time 10 "${APP_URL}/api/health" | grep -q '"status":"ok"' &&
+            curl --fail --silent --show-error --max-time 10 "${APP_URL}/" | grep -q 'id="root"' &&
+            curl --fail --silent --show-error --max-time 10 "${APP_URL}/api/todos" | grep -q '^\['
+          }
           for i in $(seq 1 40); do
-            if curl --fail --silent --show-error --max-time 10 "${APP_URL}/api/health" | grep -q '"status":"ok"'; then
-              echo "Health check passed on attempt ${i}"
+            if check; then
+              echo "Smoke test passed on attempt ${i}"
               exit 0
             fi
             echo "Attempt ${i}: not healthy yet"
             sleep 15
           done
-          echo "Health check failed after 10 minutes"
+          echo "Smoke test failed after 10 minutes"
           exit 1
