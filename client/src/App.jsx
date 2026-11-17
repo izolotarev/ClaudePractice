@@ -53,6 +53,14 @@ export default function App() {
     } catch { setError(GENERIC_ERROR); }
   }
 
+  async function clearCompleted() {
+    try {
+      await api('/api/todos/completed', { method: 'DELETE' });
+      setTodos((l) => l.filter((x) => !x.done));
+      setError('');
+    } catch { setError(GENERIC_ERROR); }
+  }
+
   return (
     <main>
       <h1>Todos</h1>
@@ -71,6 +79,7 @@ export default function App() {
           </li>
         ))}
       </ul>
+      {todos.some((t) => t.done) && <button onClick={clearCompleted}>Clear completed</button>}
     </main>
   );
 }
