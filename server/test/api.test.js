@@ -150,4 +150,42 @@ describe('API', () => {
       expect((await request(app).post('/api/todos').send({ text: ' ' + 'x'.repeat(201) + ' ' })).status).toBe(400);
     });
   });
+
+  describe('DELETE /api/todos/completed', () => {
+    const add = async (text) => (await request(app).post('/api/todos').send({ text })).body;
+    const complete = (id) => request(app).patch(`/api/todos/${id}`).send({ done: true });
+    const list = async () => (await request(app).get('/api/todos')).body;
+
+    it('removes only the done todos and reports how many, with gapped ids', async () => {
+      for (const t of ['a', 'b', 'c', 'd', 'e']) await add(t); // ids 1..5
+      await request(app).delete('/api/todos/2'); // gap in the ids
+      await complete(4); // done, out of order
+      await complete(1);
+
+      const r = await request(app).delete('/api/todos/completed');
+      expect(r.status).toBe(200);
+      expect(r.body).toEqual({ deleted: 2 });
+
+      const left = await list();
+      expect(left.map((t) => t.id)).toEqual([3, 5]);
+      expect(left.every((t) => t.done === false)).toBe(true);
+    });
+
+    it('returns 0 and changes nothing when no todo is done', async () => {
+      await add('a');
+      await add('b');
+      const r = await request(app).delete('/api/todos/completed');
+      expect(r.status).toBe(200);
+      expect(r.body).toEqual({ deleted: 0 });
+      expect(await list()).toHaveLength(2);
+    });
+
+    it('returns 0 on an empty list, and a second call removes nothing more', async () => {
+      expect((await request(app).delete('/api/todos/completed')).body).toEqual({ deleted: 0 });
+      await add('a');
+      await complete(1);
+      expect((await request(app).delete('/api/todos/completed')).body).toEqual({ deleted: 1 });
+      expect((await request(app).delete('/api/todos/completed')).body).toEqual({ deleted: 0 });
+    });
+  });
 });
