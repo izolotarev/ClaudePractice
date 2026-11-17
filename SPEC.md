@@ -7,7 +7,7 @@ A single-list todo web app: add, complete, and delete todos. Learning project fo
 - Frontend: React + Vite, in `client/`
 - Backend: Node + Express, in `server/`
 - Storage: SQLite via `better-sqlite3`
-- Features v1: add, complete (toggle), delete. Nothing else.
+- Features v1: add, complete (toggle), delete. Nothing else, except "clear completed", which is API only for now (`DELETE /api/todos/completed`, no UI control yet).
 - No users, no login. One shared list.
 - Tests: Vitest for API (with supertest) and React components (with Testing Library)
 - Deploy: Render free tier. Data resets on each deploy, which is accepted.
@@ -31,6 +31,7 @@ A single-list todo web app: add, complete, and delete todos. Learning project fo
 | POST | `/api/todos` | `{ "text": string }` | 201, the new todo | 400 if text missing, empty, or over 200 chars |
 | PATCH | `/api/todos/:id` | `{ "done": boolean }` | 200, the updated todo | 400 if `done` is not a boolean; 404 if no such id |
 | DELETE | `/api/todos/:id` | | 204 | 404 if no such id |
+| DELETE | `/api/todos/completed` | | 200, `{ "deleted": number }`, the count of removed todos (0 if none were done) | |
 | GET | `/api/health` | | 200, `{ "status": "ok" }` | |
 
 A todo is `{ id, text, done, created_at }` with `done` as a boolean in responses.

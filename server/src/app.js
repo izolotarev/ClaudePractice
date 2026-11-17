@@ -35,6 +35,12 @@ export function createApp(db, { staticDir } = {}) {
     res.json(toTodo(db.prepare('SELECT * FROM todos WHERE id = ?').get(id)));
   });
 
+  // Must be registered before '/api/todos/:id', or 'completed' would be treated as an id.
+  app.delete('/api/todos/completed', (_req, res) => {
+    const info = db.prepare('DELETE FROM todos WHERE done = 1').run();
+    res.json({ deleted: info.changes });
+  });
+
   app.delete('/api/todos/:id', (req, res) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(404).json({ error: 'not found' });
