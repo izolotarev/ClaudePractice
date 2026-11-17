@@ -274,10 +274,25 @@ Built "clear completed" twice, API first (PR #22), then the button (PR #23).
 
 **How to ask (two turns you can inspect):**
 
-1. `Update SPEC.md, then write the tests only, run them, and show me the failure. Don't write the feature yet.`
+1. `Update SPEC.md, then write the tests only, run them, and show me the failure. Explain each test in one plain sentence. Don't write the feature yet.`
 2. `Now write the smallest code that passes, and run the full suite.`
 
 The Stop hook blocks a red turn, so unless you switch it off briefly, red and green happen in one turn. Ask for the failure output in my message so you still see the red step.
+
+**Not a testing expert? You don't need to be.** Claude writes the tests. Your job is judgment about the product, not test code:
+
+1. Describe the behavior in plain words in `SPEC.md`.
+2. Read the test names and the failure message. Check that the names match what you asked for and the failure says something sensible (`button not found`, `expected 404 to be 200`).
+3. See green, then try the feature in the browser.
+
+| Worry | What to do |
+|---|---|
+| "I can't tell if the tests are good" | Ask: `List what each new test checks in one plain sentence, and which case isn't covered.` |
+| "I don't understand the failure" | Ask me to explain it. Fluency is not required. |
+| "Tests passed, is that enough?" | Green only means the tests I wrote pass. Try the feature yourself. |
+| "Too much ceremony" | Scale it down: full cycle for logic that stores or deletes data and for validation; for small changes ask for test and code, make sure the suite runs, and look at the result; for visuals and config, a quick look in the browser is the right check. |
+
+You don't need to learn how to write test code or terms like mocks and fixtures. Keep one habit: send the first prompt above, read the output, then `Now write the smallest code that passes, and run the full suite.` If a task feels too big to describe, split it. A feature you can state in a few sentences is one you can check, with or without testing skills.
 
 **Avoid:** tests and code in the same breath with no test run in between (a test can pass without ever being red); treating green as correct; testing trivia such as whether `setError('')` is called. Test what a user or caller can see.
 

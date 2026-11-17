@@ -5139,3 +5139,361 @@ The file c:\Repositories\SampleApp\course\NEW-PROJECT-GUIDE.md has been updated 
 
 > **Tool:** Bash {"command":"sed -i 's/^| 10 | Headless, cost, wrap-up | done |$/&\\n| Extra | Test first (TDD) | done |/' course/PROGRESS.md && tail -4 course/PROGRESS.md; node course/export-transcripts.mjs \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp\" course/transcripts 2>&1 | tail -3; grep -rIoE \"user@example|Users[\\\\/]+Igor|key=[A-Za-z0-9_-]{10,}|sk-ant-[A-Za-z0-9_-]+\" course CLAUDE.md
 … [truncated 62 chars]
+
+> Result:
+```
+| 8 | GitHub Actions with Claude | done |
+| 9 | Deploy | done |
+| 10 | Headless, cost, wrap-up | done |
+| Extra | Test first (TDD) | done |
+session-5.md 2026-11-15T11:27:37.913Z 461 blocks
+session-6.md 2026-11-15T21:30:09.456Z 1978 blocks
+session-7.md 2026-11-17T03:31:08.410Z 19 blocks
+scan done
+ M course/NEW-PROJECT-GUIDE.md
+ M course/PLAYBOOK.md
+ M course/PROGRESS.md
+ M course/SYLLABUS.md
+ M course/transcripts/session-6.md
+ M course/transcripts/session-7.md
+[This command modified 1 file you've previously read: course\PROGRESS.md. Call Read before editing.]
+```
+
+## Claude
+
+The scan is clean: no email, profile path, key or token. I'm committing and opening the PR.
+
+> **Tool:** Bash {"command":"git add course && git commit -q -m \"Add test-first vs code-first guidance to syllabus, playbook and guide; refresh transcripts\n\nCo-Authored-By: Claude Sonnet 5.5 <user@example.com>\" && git log --all --format='%ae %ce' | sort -u && git push -u origin docs/test-first-approach 2>&1 | tail -1 && gh pr create --base main --title \"Add test-first vs code-first guidance, refresh tran
+… [truncated 395 chars]
+
+> Result:
+```
+warning: in the working copy of 'course/PROGRESS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/SYLLABUS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-6.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-7.md', LF will be replaced by CRLF the next time Git touches it
+41898282+claude[bot]@users.noreply.github.com user@example.com
+user@example.com user@example.com
+user@example.com user@example.com
+ * [new branch]      docs/test-first-approach -> docs/test-first-approach
+https://gith
+… [truncated 141 chars]
+```
+
+## Claude
+
+PR #25 is open and its `test` check is green: https://github.com/izolotarev/ClaudePractice/pull/25
+
+**What I added, file by file**
+- **[SYLLABUS.md](course/SYLLABUS.md):** a new "Extra: Test first (TDD)" section before "After the course". It has the goal, why it matters, the six steps we followed, a done-when line, and the key facts (when to use test first and when to use code first).
+- **[PLAYBOOK.md](course/PLAYBOOK.md):** under the TDD section I added the decision table (test first for clear behavior, code first for exploring, glue and config, visuals, unreproducible bugs, and untested legacy code), why test first suits me in particular, the two prompts to use, and what to avoid.
+- **[NEW-PROJECT-GUIDE.md](course/NEW-PROJECT-GUIDE.md):** Phase 4 now says to build behavior test first, Phase 10's loop step 3 is now red, green and a guard check, and two new gotchas were added.
+- **[PROGRESS.md](course/PROGRESS.md):** a row "Extra | Test first (TDD) | done". I added it on my own initiative, so remove it if you'd rather keep the table to the 10 lessons.
+- **Transcripts:** re-exported with the redaction script. Every commit on every branch uses a no-reply address.
+
+**One limit:** the transcript export reads the live session log, so it stops at the moment I ran it. It doesn't contain these last messages or the work after the export.
+
+Should I merge PR #25 with rebase? That starts another Deploy run waiting for your approval, although the app doesn't change.
+
+## You
+
+yes, merge PR 25 with rebase
+
+> **Tool:** Bash {"command":"gh pr view 25 --json state -q .state; gh pr merge 25 --rebase --delete-branch 2>&1 | tail -1; git checkout -q main && git pull -q --ff-only; git fetch -q --prune; git log --format='%h %ae %ce %s' -1; git status -sb | head -2"}
+
+> Result:
+```
+OPEN
+ 5 files changed, 2244 insertions(+), 2 deletions(-)
+7cc13f1 user@example.com user@example.com Add test-first vs code-first guidance to syllabus, playbook and guide; refresh transcripts
+## main...origin/main
+```
+
+## Claude
+
+PR #25 is merged with rebase (`7cc13f1`, no-reply emails), and `main` is in sync.
+
+The test-first guidance is now in the syllabus, the playbook, the new-project guide and the progress table, and the transcripts are refreshed.
+
+The merge started a Deploy run that will wait for your approval in the Actions tab. It only changes docs, so you can approve it or reject it, and the live app stays as it is either way.
+
+## You
+
+approved, check the deploy
+
+> **Tool:** Bash {"command":"id=$(gh run list --workflow deploy.yml --limit 1 --json databaseId -q '.[0].databaseId'); timeout 110 bash -c \"until gh run view $id --json status -q .status | grep -q completed; do sleep 5; done\"; gh run view $id --json status,conclusion,displayTitle -q '\"\\(.status) \\(.conclusion) \\(.displayTitle)\"'; gh run view $id --log 2>&1 | grep -E \"Deploy requested|Smoke test passed|Atte
+… [truncated 226 chars]
+
+> Result:
+```
+completed success Add test-first vs code-first guidance to syllabus, playbook and guide…
+2026-11-17T06:05:21.8744268Z Deploy requested for 7cc13f1e6b8f2beeafc6b9f25ec5a4e9c9c9aa00
+2026-11-17T06:05:31.9095265Z Attempt 1: not healthy yet
+2026-11-17T06:05:47.5075451Z Smoke test passed on attempt 2
+200 200 200
+```
+
+## Claude
+
+The deploy for PR #25 succeeded.
+
+- **Deploy requested:** commit `7cc13f1`, the test-first guidance.
+- **Smoke test:** attempt 1 reported "not healthy yet" and attempt 2 passed after about 26 seconds. That is the usual Render restart after the hook, even though the app code didn't change.
+- **Live site:** `/api/health`, `/` and `/api/todos` all return 200 at https://claudepractice.onrender.com.
+
+Nothing in the running app changed with this deploy, since the PR only touched course files. The Clear completed feature from before is still live.
+
+`main` is clean and in sync, no approvals are pending, and the syllabus, playbook, new-project guide and progress table all carry the test-first guidance.
+
+## You
+
+explain this part in phase 4 @course/NEW-PROJECT-GUIDE.md  Now write the smallest code that passes, and run the full suite.
+
+## Claude
+
+That sentence is the second of two prompts in the test-first process. The first prompt is `Write the tests only, run them, and show me the failure. Don't write the feature yet.` Once you've seen the failure, you send this second one:
+
+> Now write the smallest code that passes, and run the full suite.
+
+It has two instructions.
+
+## "Write the smallest code that passes"
+
+This is the **green** step. Claude should write only what the failing test needs, nothing more.
+
+- **Why small:** if I'm free to build "the whole feature", I tend to add extras: more options, more routes, handling for cases nobody asked for. Each extra is code that has no test, so it can be wrong without anyone noticing. Small code means every line is backed by a test.
+- **Example from this project:** the failing test needed `DELETE /api/todos/completed` to return `{deleted: n}`. The smallest code was 4 lines:
+  ```js
+  app.delete('/api/todos/completed', (_req, res) => {
+    const info = db.prepare('DELETE FROM todos WHERE done = 1').run();
+    res.json({ deleted: info.changes });
+  });
+  ```
+  There was no extra validation, no logging and no options. For the button, it was a handler and a conditional button, 8 lines.
+- **Not "the cleverest" or "the most general" code.** The goal is to make the red tests green. If a new need appears later, you write a new test first.
+
+## "Run the full suite"
+
+This means running **all** the tests, not only the new ones: in this repo `npm test`, which runs the server and client tests.
+
+- **Why not just the new tests:** the new code can break something that used to work. While building the endpoint, the thing to guard against was disturbing the existing `/:id` routes. Only the full suite shows that. In your project that was 38 server and 10 client tests passing.
+- **It's the proof, not Claude's word.** The instruction also makes me show the output, so you see the pass count and not just "done". That's the lesson 3 rule: ask for the command and its output.
+- **It matches your hooks.** The Stop hook runs `npm test` anyway before I can finish a turn, so the full suite is the standard that's enforced.
+
+## What happens in order
+
+1. You read the red output from the first prompt and are happy it failed for the right reason.
+2. You send this prompt.
+3. I make the minimal change and run `npm test`.
+4. You see everything green, with the real numbers.
+
+## After green
+
+The guide then adds a **guard check**: break the code on purpose, see a test fail, restore it. This proves the green result means something. It's in the loop in Phase 10, step 3.
+
+## One practical note
+
+Your Stop hook blocks me from ending a turn while tests fail. So if you really want two separate turns (red, then green), the failing state can't survive between them unless you switch that hook off briefly. In practice, I run red and green in one turn and show you the failure output before the fix. You can also send both prompts in one message and get the same effect.
+
+## You
+
+should I turn off stop hook?
+
+## Claude
+
+**No, keep it on.** I'd only disable it in one narrow case, described below.
+
+## Why keep it
+
+- **It's your safety net.** The hook stops me from ending a turn with failing tests, so I can't hand you broken code and say "done". That is exactly the mistake the course set out to prevent.
+- **It costs you nothing during TDD if you work in one turn.** I write the failing tests, run them, show you the red output in my message, then write the code and run the suite, all in the same turn. The hook only checks at the very end, when everything is green.
+- **Switching it off is easy to forget.** A hook you turn off "just for now" tends to stay off, and then nothing blocks a red finish.
+
+## What you'd lose by turning it off
+
+- A turn could end with red tests, and you wouldn't be warned.
+- The same applies to every session, including `@claude` runs on GitHub if the hook file is committed. CI would still catch it, but later and on a slower loop.
+
+## What you'd gain by turning it off
+
+One thing only: the ability to **stop between red and green** and read the failing output yourself before I write any code. That's the strict two-turn version of TDD.
+
+You can usually get the same benefit without disabling anything:
+- Ask me to write the tests, run them, and **show the failure in my message**. Then add: "Stop and wait for my go-ahead before writing the code." I can't end the turn with red tests, but I can stop and ask a question inside a turn. This is what I did when I explained the red results before moving on.
+- Use plan mode or an approval step if you want a hard pause.
+
+## If you do want a hard two-turn pause
+
+1. Temporarily disable the Stop hook. The simplest way is a local override in `.claude/settings.local.json` (not committed), so the shared `settings.json` stays intact. I can set that up.
+2. Do the red turn, read the output.
+3. Do the green turn.
+4. **Remove the override** straight afterwards.
+
+I haven't tested how overriding a hook through `settings.local.json` behaves in this repo. Hook settings from different files normally combine, so a local file might not turn a shared hook off. I'd want to check that before relying on it. Editing `settings.json` directly would work, but then you'd have a change to revert in a tracked file.
+
+## My recommendation
+
+Leave it on. Use the "show me the failure, then wait for my go-ahead" prompt when you want to inspect the red step. It gives you control without removing your safety net.
+
+## You
+
+I am not an expert in writing tests. Should I really use TDD?
+
+## Claude
+
+**Yes, but you don't need to be good at writing tests.** In this workflow, I write the tests. Your job is smaller and easier: decide what the app should do, and read the results.
+
+## What you actually do in test-first work
+
+1. **Describe the behavior in plain words,** for example "Clear completed removes only the done todos, and the button hides when none are done". That goes in `SPEC.md`.
+2. **Read the test names and the failure message.** You don't need to follow the code. You need to check that the test names match what you asked for, and that the failure says something sensible, such as "button not found".
+3. **See green,** then try the feature yourself in the browser.
+
+Those are all judgment skills about the product, not testing skills. You did these for the Clear completed feature.
+
+## Why it's worth it even for a beginner
+
+- **It protects you from me.** I stop when work looks finished, and I can be confidently wrong. A test that failed first, then passed, is evidence you can see without reading code.
+- **It's a plain-language definition of "done".** If you can describe the behavior, you can check the tests describe it too.
+- **It catches regressions.** Later changes that break old features show up as red tests, not as a surprise on the live site.
+- **You learn by reading.** After a few features, test names and failure messages become familiar. The Clear completed tests were short and readable.
+
+## Where beginners get stuck, and what to do
+
+| Worry | What to do |
+|---|---|
+| "I can't tell if the tests are good" | Ask: `List what each new test checks in one plain sentence each, and what case isn't covered.` |
+| "I don't understand the failure" | Ask me to explain it. Reading it is not required to be fluent. |
+| "The tests passed, but is that enough?" | Try the feature yourself. Green only means the tests I wrote pass. |
+| "Too much ceremony" | Scale it down (below). |
+
+## Scale it to the size of the job
+
+- **Do the full cycle** (spec, red, green, break-check) for logic that matters: API rules, validation, anything that stores or deletes data.
+- **A lighter version is fine** for small changes: ask for the test and the code, make sure I run the suite, and look at the result. You still get the safety net of the existing tests and the Stop hook.
+- **Skip test first** for visuals, config and experiments, as in the decision table in the playbook. For those, a quick look in the browser is the right check.
+
+## What you don't need to learn
+
+- **How to write test code.** I do that.
+- **Testing theory or fancy terms** like mocks and fixtures. They're my job.
+
+## What I'd do in your position
+
+Keep the habit of one prompt: `Write the tests only, run them, and show me the failure. Explain each test in one plain sentence.` Then approve, and say `Now write the smallest code that passes, and run the full suite.` That's about as much testing knowledge as you need, and it's already in your guide and `CLAUDE.md`.
+
+If a task feels too big to describe, that's a sign to split it. A feature you can state in a few sentences is one you can check, with or without testing skills.
+
+## You
+
+Add this knowledge to new-project-guide, playbook and whatever you think is suitable: 
+
+<pasted_content id="5a61">
+What I'd do in your position
+Keep the habit of one prompt: Write the tests only, run them, and show me the failure. Explain each test in one plain sentence. Then approve, and say Now write the smallest code that passes, and run the full suite. That's about as much testing knowledge as you need, and it's already in your guide and CLAUDE.md.
+
+If a task feels too big to describe, that's a sign to split it. A feature you can state in a few sentences is one you can check, with or without testing skills.
+</pasted_content id="5a61">
+
+## Claude
+
+I'll update the guide, the playbook, the syllabus and `CLAUDE.md`, and save a short memory so future sessions know your level. These edits go on a new branch.
+
+> **Tool:** Bash {"command":"git checkout -q main && git pull -q --ff-only && git checkout -q -b docs/tdd-for-non-experts && git branch --show-current"}
+
+> **Tool:** Read {"file_path":"c:\\Repositories\\SampleApp\\CLAUDE.md","offset":27,"limit":3}
+
+> Result:
+```
+docs/tdd-for-non-experts
+```
+
+> Result:
+```
+27	- Tests that use a single row hide bugs. A past planted bug (DELETE by list position instead of id) passed every test until a test with gaps in ids was added. Use several rows and out-of-order ids.
+28	- New behavior is built test first: update `SPEC.md`, write the test, run it and show it fail for the right reason (read the message), then write the smallest code that passes. A test that passes before the code exists proves nothing: break the code on purpose afterwards and check it goes red.
+29	- The Prettier hook can reformat unrelated lines in files that aren't Prettier-formatted (`client/src/App.jsx`, `client/src/App.test.jsx`, `server/test/api.test.js`). Check `git diff --stat` after edits; for those files apply changes with a script so the diff holds only the feature.
+```
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\CLAUDE.md","old_string":"break the code on purpose afterwards and check it goes red.","new_string":"break the code on purpose afterwards and check it goes red. The user is not a testing expert: after writing tests, explain each one in one plain sentence and say what case isn't covered."}
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\NEW-PROJECT-GUIDE.md","old_string":"Ask: `Write the tests only, run them, and show me the failure. Don't write the feature yet.`, then","new_string":"Ask: `Write the tests only, run them, and show me the failure. Explain each test in one plain sentence. Don't write the feature yet.`, then"}
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\NEW-PROJECT-GUIDE.md","old_string":"- [ ] Tests must cover **every route, success and each error case**, using","new_string":"- [ ] **Not a testing expert? You don't need to be.** Claude writes the tests. Your part is to describe the behavior in plain words (in `SPEC.md`), read the test names and the failure message, and see gr
+… [truncated 552 chars]
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\PLAYBOOK.md","old_string":"1. `Update SPEC.md, then write the tests only, run them, and show me the failure. Don't write the feature yet.`","new_string":"1. `Update SPEC.md, then write the tests only, run them, and show me the failure. Explain each test in one plain sentence. Don't write the feature yet.`"}
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\PLAYBOOK.md","old_string":"**Avoid:** tests and code in the same breath","new_string":"**Not a testing expert? You don't need to be.** Claude writes the tests. Your job is judgment about the product, not test code:\n\n1. Describe the behavior in plain words in `SPEC.md`.\n2. Read the test names and the failure message. Check th
+… [truncated 1236 chars]
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\SYLLABUS.md","old_string":"3. Ask: `Write the tests only, run them, and show me the failure. Don't write the feature yet.` Read the failure message","new_string":"3. Ask: `Write the tests only, run them, and show me the failure. Explain each test in one plain sentence. Don't write the feature yet.` Read the failure message"}
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\SYLLABUS.md","old_string":"- A test that passes before the code exists proves nothing. Break the code to check it.","new_string":"- You don't need to be a testing expert. I write the tests; you describe the behavior, read the test names and the failure, and try the feature. If unsure about the tests, ask: `List what each new te
+… [truncated 269 chars]
+
+> Result:
+```
+The file c:\Repositories\SampleApp\CLAUDE.md has been updated successfully.
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\NEW-PROJECT-GUIDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\NEW-PROJECT-GUIDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\PLAYBOOK.md has been updated successfully.
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\PLAYBOOK.md has been updated successfully.
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\SYLLABUS.md has been updated successfully.
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\SYLLABUS.md has been updated successfully.
+```
+
+## Claude
+
+Now the memory, so future sessions know your testing level and how you prefer the tests presented.
+
+> **Tool:** Write {"file_path":"C:\\Users\\USER\\.claude\\projects\\c--Repositories-SampleApp\\memory\\user-testing-level.md","content":"---\nname: user-testing-level\ndescription: User is not a testing expert; explain each test in plain language and keep test-first prompts simple\nmetadata:\n  type: user\n---\n\nThe user is not an expert in writing tests. They are comfortable deciding what the app should do, readi
+… [truncated 578 chars]
+
+> **Tool:** Bash {"command":"cd \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp/memory\" && tail -c 200 MEMORY.md | cat -A | tail -2 | cut -c1-120; echo \"- [Testing level](user-testing-level.md) — not a test expert; explain each test in plain sentences\" >> MEMORY.md && cat MEMORY.md"}
+
+> Result:
+```
+File created successfully at: C:\Users\USER\.claude\projects\c--Repositories-SampleApp\memory\user-testing-level.md
+```
+
+> Result:
+```
+-user-goal.md) M-bM-^@M-^T 10-lesson Claude Code course on the todo app; status and files$
+- [Transcript redaction](transcript-redaction.md) M-bM-^@M-^T dummy values for email/paths in transcripts; no-reply git 
+- [Course routine](course-routine.md) — always keep PLAYBOOK.md, PROGRESS.md and course/transcripts current
+- [Course and user goal](course-user-goal.md) — 10-lesson Claude Code course on the todo app; status and files
+- [Transcript redaction](transcript-redaction.md) — dummy values for email/paths in transcripts; no-reply git email
+- [Testing level](user-testing-level.md) — not a test expert; explain each test in plain sentences
+Shell cwd was reset to c:\Repositories\SampleApp
+```
+
+## Claude
+
+The memory is saved. Per your course routine (keep the notes and transcripts current), I'm re-exporting the transcripts too, then scanning, committing and opening the PR.
+
+> **Tool:** Bash {"command":"node course/export-transcripts.mjs \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp\" course/transcripts 2>&1 | tail -2; grep -rIoE \"user@example|Users[\\\\/]+Igor|key=[A-Za-z0-9_-]{10,}|sk-ant-[A-Za-z0-9_-]+\" course CLAUDE.md .github 2>/dev/null; echo \"scan done\"; git diff --stat | tail -8"}
