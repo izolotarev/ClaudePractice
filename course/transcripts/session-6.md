@@ -2204,3 +2204,741 @@ success
 ```
 
 > **Tool:** Bash {"command":"node course/export-transcripts.mjs \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp\" course/transcripts 2>&1 | tail -2; git status --short; grep -rIlE \"user@example|Users[\\\\/]+Igor|RENDER_DEPLOY_HOOK=|key=[A-Za-z0-9_-]{10,}\" course CLAUDE.md .github 2>/dev/null; echo \"scan done\""}
+
+> Result:
+```
+session-5.md 2026-11-15T11:27:37.913Z 461 blocks
+session-6.md 2026-11-15T21:30:09.456Z 942 blocks
+ M course/PLAYBOOK.md
+ M course/PROGRESS.md
+ M course/transcripts/session-5.md
+ M course/transcripts/session-6.md
+course/transcripts/session-6.md
+scan done
+```
+
+## Claude
+
+The scan flagged `session-6.md`. I'm checking what matched before committing.
+
+> **Tool:** Bash {"command":"grep -nE \"user@example|Users[\\\\/]+Igor|RENDER_DEPLOY_HOOK=|key=[A-Za-z0-9_-]{10,}\" course/transcripts/session-6.md | cut -c1-200"}
+
+> Result:
+```
+2206:> **Tool:** Bash {"command":"node course/export-transcripts.mjs \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp\" course/transcripts 2>&1 | tail -2; git status --short; grep -rIlE \"us
+```
+
+> **Tool:** Bash {"command":"grep -noE \"user@example|Users[\\\\/]+Igor|RENDER_DEPLOY_HOOK=|key=[A-Za-z0-9_-]{10,}\" course/transcripts/session-6.md"}
+
+> Result:
+```
+2206:RENDER_DEPLOY_HOOK=
+```
+
+## Claude
+
+That match is only the text `RENDER_DEPLOY_HOOK=` inside my own scan command. No hook URL, key, email or profile path appears. The redaction worked. I'm committing now.
+
+> **Tool:** Bash {"command":"git add course && git commit -q -m \"Add lesson 9 notes, mark progress, refresh transcripts\n\nCo-Authored-By: Claude Sonnet 5.5 <user@example.com>\" && git log --all --format='%ae %ce' | sort -u && git push -u origin docs/lesson-9 2>&1 | tail -1 && gh pr create --base main --title \"Add lesson 9 notes, mark progress, refresh transcripts\" --body \"Lesson 9 done: PROGRESS, PLAYBOO
+… [truncated 179 chars]
+
+> Result:
+```
+Exit code 8
+warning: in the working copy of 'course/PLAYBOOK.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/PROGRESS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-1.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-2.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-3.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-4.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'course/transcripts/session-5.md', LF 
+… [truncated 628 chars]
+```
+
+## Claude
+
+The docs PR is open as #16, and its `test` check is still running: https://github.com/izolotarev/ClaudePractice/pull/16
+
+The commit metadata check is clean. Every commit on every branch uses a no-reply address, and the only other author is `claude[bot]`.
+
+**Lesson 9 results**
+- **Live app:** https://claudepractice.onrender.com serves the app, and `main` deploys only through the Deploy workflow.
+- **Gate:** tests run first, then your approval in the `production` environment, then the Render hook, then the smoke test.
+- **Smoke test:** it checks the health route, the home page and `/api/todos`.
+- **Rollback:** you broke production with PR #13, saw the old smoke test miss it, rolled back with the revert PR #14, and tightened the smoke test in PR #15.
+
+**What is still open**
+- **Exact version check:** the smoke test can't prove the new commit is the one serving. That needs the health route to report its commit, which changes SPEC.md. It's a candidate for a later lesson or a small PR if you want it.
+- **PR #16 triggers another deploy run** when merged, since every push to `main` does. It will wait for your approval. You can approve it as usual, or reject it, since nothing in the app changes.
+
+Shall I merge PR #16 with rebase once `test` is green?
+
+## You
+
+yes, merge PR 16 with rebase
+
+> **Tool:** Bash {"command":"gh pr checks 16 2>&1; gh pr merge 16 --rebase --delete-branch 2>&1 | tail -1; git checkout -q main && git pull -q --ff-only; git fetch -q --prune; git log --format='%h %ae %ce %s' -1; git status -sb | head -2; sleep 15; gh run list --workflow deploy.yml --limit 1"}
+
+> Result:
+```
+test	pass	17s	https://github.com/izolotarev/ClaudePractice/actions/runs/43961090944/job/133628360890	
+ 3 files changed, 1350 insertions(+), 2 deletions(-)
+88c90e2 user@example.com user@example.com Add lesson 9 notes, mark progress, refresh transcripts
+## main...origin/main
+waiting		Add lesson 9 notes, mark progress, refresh transcripts	Deploy	main	push	43961405528	29s	2026-11-16T21:34:12Z
+```
+
+## Claude
+
+PR #16 is merged with rebase (`88c90e2`, no-reply emails). Local `main` is in sync with `origin/main`, and stale branches are pruned.
+
+Lesson 9 is complete: `PROGRESS.md` marks it done, the playbook has a lesson 9 section, and the transcripts are refreshed.
+
+The merge started one more Deploy run, which is waiting for your approval: https://github.com/izolotarev/ClaudePractice/actions/runs/43961405528. The commit changes only docs, so you can approve it as usual (the app stays the same) or reject it from the same Review deployments dialog. Neither choice affects the live site.
+
+Lesson 10 is the last one: headless mode, cost, and wrap-up. Do you want to start it?
+
+## You
+
+explain me what was done in lesson 9
+
+## Claude
+
+# Lesson 9: Deploy, step by step
+
+The goal was that `main` goes live only through GitHub Actions, with a test run, your approval and a check afterwards. Nothing deploys from your laptop.
+
+## Part 1: Setup (mostly you)
+
+**1. Render web service.** You created a web service from the GitHub repo, with these settings:
+- **Build and start:** it builds the client (`npm ci && npm run build`) and starts the server with `npm start`.
+- **Health check path:** `/api/health`. The syllabus says `/health`, but the real route in this app is `/api/health`.
+- **Auto-Deploy off.** This one matters. If it were on, Render would deploy every push by itself, skipping tests, approval and the smoke test.
+
+**2. Secret and variable.**
+- **`RENDER_DEPLOY_HOOK` (secret):** a private URL that tells Render "deploy now". Anyone holding it can trigger a deploy, so it is write-only and masked in logs. You saved it through GitHub, and I never saw it.
+- **`APP_URL` (variable):** `https://claudepractice.onrender.com`. It isn't secret, so it's a visible variable.
+
+**3. `production` environment.** In repo Settings → Environments you created `production` and added yourself as required reviewer. Any job that targets it pauses until you click approve. I confirmed through the API that the reviewer rule existed before merging the workflow.
+
+## Part 2: The deploy workflow (PR #12)
+
+`.github/workflows/deploy.yml` runs on every push to `main`, or manually from the Actions tab:
+
+1. **`test` job:** `npm ci` and `npm test`.
+2. **`deploy` job:** it runs only if `test` passed, then waits for your approval because of `environment: production`.
+3. **Trigger Render:** it posts to the hook with `&ref=<commit sha>`, so Render deploys exactly the commit that passed. The hook URL goes through an environment variable and is never printed.
+4. **Smoke test:** a quick check against the live site, retried every 15 seconds for up to 10 minutes because Render needs time to restart.
+5. **Safety settings:** a `concurrency` group so deploys queue and don't overlap, a 15-minute timeout, and read-only repo permissions.
+
+The first run, after merging PR #12, waited for your approval and passed. You also confirmed in Render's dashboard that the live commit was `1a05607`.
+
+## Part 3: Break, then roll back (PRs #13 and #14)
+
+**The break (PR #13).** I changed `client/dist` to `client/distt` in `server/src/index.js`.
+- **Why that break:** a broken health route would fail the required `test` check, so it could never reach `main`. A realistic bad deploy passes CI. `index.js` isn't covered by tests, so all 35 server tests and 6 client tests still passed.
+- **Effect in production:** the server started fine and the API worked, but the home page returned 404, because `app.js` only serves the client if that folder exists.
+- **What the pipeline said:** the deploy run went green, because the smoke test only checked `/api/health`. I confirmed `/` was 404 while the run was green.
+
+**The rollback (PR #14).** I ran `git revert` on the break commit, on a branch, and opened a PR. It flipped the one line back, passed `test`, and was merged with rebase. You approved the second deploy and `/` returned 200 again.
+
+**Why a revert PR and not Render's dashboard rollback:** a dashboard rollback is faster, but it bypasses git. `main` would still contain the bug, and the next push would redeploy it. A revert fixes the source of truth and goes through the same checks.
+
+## Part 4: A better smoke test (PR #15)
+
+Because the old test missed a real outage, the smoke test now needs all three to pass in one attempt:
+- `/api/health` returns `"status":"ok"`.
+- `/` returns the page containing the React root element.
+- `/api/todos` returns a JSON array.
+
+I tested that logic locally before opening the PR. It passed on the healthy site and failed on a real 404. My first failure simulation was wrong, because the app serves `index.html` for unknown non-API paths, so I used `/api/nope` instead. The first real run of the new test passed on attempt 1.
+
+## Part 5: Wrap-up (PR #16)
+
+Lesson 9 is marked done in `PROGRESS.md`, `PLAYBOOK.md` has a new section with the steps and gotchas, and the transcripts were re-exported with the redaction script. I scanned them for your email, profile path and any hook key and found none.
+
+## What to remember
+
+- **Pipeline:** merge to `main`, tests, your approval, deploy, smoke test.
+- **Smoke tests only prove what they check.** A health-only test missed a dead home page.
+- **Tests and smoke test can both miss things.** The wrong path in `index.js` slipped past the unit tests too.
+- **Revert PR:** the safe rollback, because it keeps git as the source of truth.
+- **Approvals:** every merge to `main` starts a deploy run that waits for you, including docs-only PRs.
+
+## Still open
+- **Old versus new build:** the smoke test can't tell whether the new commit is the one serving. An exact check would need the health route to report its commit, which changes SPEC.md.
+- **Last Deploy run:** the run from the docs PR (#16) was waiting for your approval when we stopped. If it's still pending, you can approve it or reject it. The app is unaffected either way.
+
+## You
+
+github/workflows/deploy.yml runs on every push to main, or manually from the Actions tab. how it knows that?
+
+## Claude
+
+It reads that from the first lines of the file itself. The `on:` block declares when the workflow should start.
+
+```yaml
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+```
+
+**How GitHub uses it**
+
+1. **Discovery:** GitHub scans every file in `.github/workflows/` on the repo. Any `.yml` or `.yaml` file there is treated as a workflow. You don't register or enable anything.
+2. **Event matching:** each time something happens in the repo (a push, a PR, a comment), GitHub generates an event. It compares that event to the `on:` block of each workflow file.
+3. **Starting a run:** if the event matches, GitHub queues a run. If not, nothing happens.
+
+**What the two triggers mean**
+
+- **`push` with `branches: [main]`:** a push to `main` matches. Merging a PR with rebase counts as a push to `main`, which is why every merge started a deploy run. A push to another branch, like `chore/...`, doesn't match.
+- **`workflow_dispatch:`** adds a "Run workflow" button on the Actions tab for this workflow. It has no conditions, so you can start a run by hand on any branch you pick. We haven't used it, but it's handy for a redeploy.
+
+**Which version of the file runs**
+
+For a push, GitHub uses the workflow file as it exists in the commit that was pushed. So a change to `deploy.yml` takes effect on the next push after it lands on `main`. This is different from the issue and comment triggers in `claude.yml`, which run the version on the default branch.
+
+**The same mechanism, different triggers**
+
+| File | `on:` | Starts when |
+|---|---|---|
+| `ci.yml` | `pull_request` | a PR is opened or updated |
+| `deploy.yml` | `push` to `main`, `workflow_dispatch` | a merge lands on `main`, or you click the button |
+| `claude.yml` | comments, issues, reviews | someone writes text, and its `if:` then requires `@claude` |
+
+The `on:` block only decides whether a run starts. What the run does is defined by the `jobs:` section below it.
+
+## You
+
+start lesson 10
+
+> **Tool:** Bash {"command":"git status -sb | head -3; sed -n '/^## 10\\./,$p' course/SYLLABUS.md; gh run list --workflow deploy.yml --limit 2"}
+
+> Result:
+```
+## main...origin/main
+## 10. Headless, cost, wrap-up (20 min)
+**Do:**
+1. `claude --bare -p "Summarize README.md" --allowedTools "Read" --output-format json --max-turns 3`
+2. `/usage` to see where tokens went.
+3. `/effort low` for quick edits, `high` for hard bugs. `/model` to switch.
+**Key facts:**
+- `claude -p` without `--bare` runs the repo's hooks and MCP servers with no trust prompt.
+- `--bare` uses `ANTHROPIC_API_KEY`, not your login.
+- Unattended-run checklist: done criteria, self-check, allowed scope, stop limits (`--max-turns`, `--max-budget-usd`), human merge.
+- Cache is about 1 hour on a subscription, 5 minutes on API key; `/clear` between tasks saves tokens.
+
+## After the course
+Parallel work (`claude -w`, worktrees, `/batch`), skills (`.claude/skills/`), prompt-injection testin
+… [truncated 317 chars]
+```
+
+## Claude
+
+Lesson 9's last Deploy run finished successfully, and `main` is clean and in sync. Before starting, I'm checking what the first exercise needs.
+
+> **Tool:** Bash {"command":"ls README.md 2>&1; claude --version 2>&1 | head -1; claude --help 2>&1 | grep -E -- \"--bare|--max-budget-usd|--max-turns|--output-format\" | cut -c1-140; [ -n \"$ANTHROPIC_API_KEY\" ] && echo \"ANTHROPIC_API_KEY: set\" || echo \"ANTHROPIC_API_KEY: not set\""}
+
+> Result:
+```
+ls: cannot access 'README.md': No such file or directory
+2.1.302 (Claude Code)
+  --bare                                Minimal mode: skip hooks (those defined
+                                        --print and --output-format=stream-json)
+                                        --output-format=stream-json)
+                                        --output-format=stream-json)
+  --max-budget-usd <amount>             Maximum dollar amount to spend on API
+  --output-format <format>              Output format (only works with --print):
+                                        --output-format=stream-json)
+ANTHROPIC_API_KEY: not set
+```
+
+## Claude
+
+Lesson 10 is the last one: running Claude without the interactive UI, watching cost, and the final wrap-up.
+
+Two things differ from the syllabus, based on what I just found:
+- **No `README.md`:** the syllabus example asks it to summarize that file, and it doesn't exist here. I'd use `SPEC.md` instead.
+- **`--bare` can't run here:** it skips your login and needs `ANTHROPIC_API_KEY`, which isn't set in my shell. I'm not going to ask you for a key. You can set one in your own terminal if you want to try it, but API usage is billed per token.
+
+**Plan**
+
+| # | Step | Who |
+|---|---|---|
+| 1 | **Headless run without `--bare`:** `claude -p "Summarize SPEC.md in 5 bullets" --allowedTools "Read" --output-format json --max-turns 3 --max-budget-usd 0.50`. This uses your normal login. It shows the JSON result with cost, turns and session id. | Me |
+| 2 | **See what the repo's hooks do in headless mode.** Without `--bare`, `claude -p` runs your project hooks with no trust prompt. Your Stop hook runs `npm test`, so I'll watch for it. The tools are read-only, so no edit hooks (Prettier) should fire. | Me |
+| 3 | **`/usage`:** see where tokens went in this session. You type it, since it's a built-in command I can't run. | You |
+| 4 | **`/effort` and `/model`:** try `/effort low` for quick edits, `high` for hard bugs, and `/model` to switch. Also yours to type. | You |
+| 5 | **Unattended-run checklist:** I'll walk you through it and check it against your `claude.yml`. It already has `--max-turns 8` and a timeout, a PR with required review, and no direct push to `main`. It's missing a `--max-budget-usd` cap. | Me |
+| 6 | **Wrap-up:** mark lesson 10 done in `PROGRESS.md`, write the final playbook section, and re-export the transcripts. | Me |
+
+**Two cautions**
+- **The headless run costs a little.** The budget flag caps it at $0.50. The real cost will be far lower, but the JSON output will show the exact number.
+- **Subscription or API:** the cache lifetime and billing depend on how you're logged in. The syllabus says about 1 hour of cache on a subscription and 5 minutes on an API key. I'll point out which applies once I see the output.
+
+Shall I run step 1 now?
+
+## You
+
+yes, run step 1
+
+> **Tool:** Bash {"command":"claude -p \"Summarize SPEC.md in 5 bullets\" --allowedTools \"Read\" --output-format json --max-turns 3 --max-budget-usd 0.50 > \"$TEMP/headless.json\" 2>\"$TEMP/headless.err\"; echo \"exit $?\"; wc -c \"$TEMP/headless.json\" \"$TEMP/headless.err\"; node -e '\nconst r=JSON.parse(require(\"fs\").readFileSync(process.argv[1],\"utf8\"));\nconst {result,...rest}=r; console.log(JSON.stringi
+… [truncated 135 chars]
+
+> Result:
+```
+exit 0
+4244 C:\Users\USER\AppData\Local\Temp/headless.json
+   0 C:\Users\USER\AppData\Local\Temp/headless.err
+4244 total
+{
+ "duration_api_ms": 6120,
+ "stop_reason": "end_turn",
+ "session_id": "d49d68e7-da5d-419d-a52b-5c6d52567bae",
+ "total_cost_usd": 0.08076580000000001,
+ "usage": {
+  "input_tokens": 4,
+  "cache_creation_input_tokens": 16941,
+  "cache_read_input_tokens": 69172,
+  "output_tokens": 595,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 16941,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 528,
+    "cache_read_input_
+… [truncated 2556 chars]
+```
+
+> **Tool:** Bash {"command":"node -e '\nconst r=JSON.parse(require(\"fs\").readFileSync(process.argv[1],\"utf8\"));\nfor (const k of [\"type\",\"subtype\",\"is_error\",\"num_turns\",\"duration_ms\",\"duration_api_ms\",\"total_cost_usd\",\"terminal_reason\"]) console.log(k, r[k]);\nconsole.log(\"keys:\", Object.keys(r).join(\", \"));\n' \"$TEMP/headless.json\"; git status --short | head"}
+
+> Result:
+```
+type result
+subtype success
+is_error false
+num_turns 2
+duration_ms 13674
+duration_api_ms 6120
+total_cost_usd 0.08076580000000001
+terminal_reason completed
+keys: duration_api_ms, stop_reason, session_id, total_cost_usd, usage, modelUsage, permission_denials, terminal_reason, fast_mode_state, fast_mode_disabled_reason, subagent_stats, safety_stops, is_error, num_turns, subtype, api_error_status, result, ttft_ms, type, duration_ms, uuid, ttft_stream_ms, time_to_request_ms, time_to_request_phases_ms, turn_start_resume_kind, process_turn_index, time_to_request_loop_lag_ms, time_to_request_cpu_ms, time_to_request_major_faults, input_attachments_detail, first_content_frame_ms, queued_turn_count, result_index
+```
+
+## Claude
+
+Step 1 worked. The headless run finished successfully and used your normal login. It made no file changes, and the working tree is still clean.
+
+**The command**
+```
+claude -p "Summarize SPEC.md in 5 bullets" --allowedTools "Read" \
+  --output-format json --max-turns 3 --max-budget-usd 0.50
+```
+
+**What came back**
+
+| Field | Value | Meaning |
+|---|---|---|
+| `is_error` / `terminal_reason` | false / completed | normal finish |
+| `num_turns` | 2 | one tool call to read the file, one answer |
+| `duration_ms` | 13,674 (about 14 s) | wall-clock time; 6.1 s of that was the API |
+| `total_cost_usd` | **$0.081** | about 8 cents, far under the $0.50 cap |
+| `permission_denials` | none | `Read` was the only tool it needed |
+| `session_id` | `d49d68e7-…` | you can resume it with `--resume` |
+
+The result was a correct 5-bullet summary of `SPEC.md`, returned as the `result` field of the JSON. Scripts can read that field and ignore the rest.
+
+**Where the tokens went**
+- **Cache creation:** about 16.9k tokens, written to the cache at full price.
+- **Cache read:** about 69k tokens, read back cheaply. This is the biggest part of the input, because Claude Code's own instructions and your project files (`CLAUDE.md` and memory) are sent on every call.
+- **Output:** only 595 tokens, which is the actual summary.
+- **Second model:** a tiny Haiku call (about $0.0001) also ran, probably for a minor background task. The Sonnet call was nearly the whole cost.
+
+This explains the key point of the lesson: a short task still carries a large fixed context. A trivial request cost 8 cents, mostly because of that context and not because of the answer.
+
+**Cache lifetime:** the usage shows `ephemeral_1h_input_tokens`, so this session uses the **1-hour cache** that the syllabus ties to a subscription login. Your login is a subscription, not an API key.
+
+**The hook question, answered honestly**
+- I can't see from this output whether your Stop hook ran `npm test` in headless mode. The JSON doesn't list hook activity, and the run time of about 14 s is too short for me to tell either way. The syllabus says non-`--bare` runs apply the repo's hooks, and I haven't proved that here.
+- Nothing was edited, so the Prettier hook had no reason to fire.
+
+If you'd like proof, I can rerun it with `--bare` removed versus a hook that writes a marker file, but that means temporarily changing `settings.json`. I'd only do it if you want it, since it's a side trip.
+
+**Next**
+Step 3 is yours: type `/usage` here to see where this session's tokens went. Then step 4: try `/effort low` and `/model`. Tell me what you see, and we'll move to the unattended-run checklist, where I'd suggest adding `--max-budget-usd` to `claude.yml`.
+
+## You
+
+<local-command-caveat>The command below was run directly in Claude Code, not sent to you as a request, and its output goes straight to the user. It's recorded here as context for later messages.</local-command-caveat>
+
+## You
+
+<command-name>/effort</command-name>
+            <command-message>effort</command-message>
+            <command-args>low</command-args>
+
+## You
+
+I just set effort to low
+
+## Claude
+
+Effort is now `low` for this session only. It resets in a new session, unless you set it in settings.
+
+**What the setting does:** it controls how much I think before and during a task. At `low` I do less reasoning and tend to take the most direct path. That's cheaper and faster.
+
+**When each level fits**
+- **`low`:** quick, well-defined edits (a typo, renaming a variable, adding one test case, a small docs change).
+- **`high`:** hard bugs, unclear causes, or changes across several files where a wrong guess is costly.
+- **In between:** most everyday work.
+
+**Trade-off:** at `low`, I may miss edge cases or skip checking my own work. For anything where correctness matters, such as a deploy workflow, switch up.
+
+To see the effect, give me a small task now. For example: "add a one-line comment above `parseId` in `server/src/app.js`". Compare how it feels to earlier work. Keep in mind that a tiny task won't show a big cost difference, since the fixed context still dominates, as we saw in the headless run.
+
+Next steps for you:
+- Type `/usage` to see where this session's tokens went.
+- Try `/model` to see the models available. Don't switch if you're happy with the current one.
+
+Tell me what `/usage` shows, and we'll go through the unattended-run checklist.
+
+## You
+
+go through the unattended-run checklist
+
+> **Tool:** Bash {"command":"sed -n 1,40p .github/workflows/claude.yml; gh api repos/izolotarev/ClaudePractice/branches/main/protection -q '{checks:.required_status_checks.contexts,reviews:.required_pull_request_reviews,admins:.enforce_admins.enabled}' 2>&1 | head -8"}
+
+> Result:
+```
+name: Claude
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+      issues
+… [truncated 619 chars]
+```
+
+## Claude
+
+# Unattended-run checklist
+
+The syllabus lists five items for any run where Claude works without you watching. Here is each one, checked against your actual `claude.yml` and branch rule.
+
+| # | Item | What it means | Your setup | Status |
+|---|---|---|---|---|
+| 1 | **Done criteria** | The task says what "finished" looks like | The issue text decides this. Issue #7 said "fill any gaps, with tests that use several rows and out-of-order ids". `SPEC.md` and `CLAUDE.md` add the rules. | Good when the issue is specific. Not enforced by anything. |
+| 2 | **Self-check** | Claude can verify its own work before stopping | The action's allowed tools had no shell, so Claude **couldn't run `npm test`**. CI checked it afterwards. | Weak |
+| 3 | **Allowed scope** | It can only touch what the task needs | The token has write access to contents, PRs and issues. It can't merge: `main` requires a PR and the `test` check, and admins are enforced too. Secrets other than the Claude token aren't passed to it. | Good |
+| 4 | **Stop limits** | It can't run forever or spend without bound | `--max-turns 8` and `timeout-minutes: 15` are set. There is **no `--max-budget-usd`**. | Partial |
+| 5 | **Human merge** | A person reviews before anything lands | PR needed, `test` required, and you merge. But the branch rule requires **0 approving reviews**, so nothing forces a second pair of eyes. You can merge your own PRs, and so could any collaborator with merge rights. | Partial |
+
+## What the gaps mean
+
+- **Self-check (2):** the action pushes code it never ran. In your run it was lucky, and CI passed. Allowing `Bash(npm test)` through `claude_args` would let Claude run the tests and fix failures within its 8 turns. The cost is a wider tool list, which is a small step up in risk. I'd allow only that exact command.
+- **Budget (4):** turns and minutes limit time, not money. A cost cap would catch a run that burns tokens on large files. The flag is `--max-budget-usd` (I confirmed it exists in your CLI help). I haven't checked whether the action passes it through `claude_args`, so a test run would show that.
+- **Review (5):** the real protection against a bad Claude PR today is CI plus your own reading. With 0 required approvals, that is a convention and not a rule. Since you're the only developer, requiring 1 approval would block your own merges, so I'd leave it. In a team, it would be worth setting.
+
+## One more item the syllabus lists as a risk, not a checkbox
+
+**Prompt injection:** the issue text, comments and PR text are all input to the agent. Anyone with write access can trigger it, and someone who can edit an issue could slip instructions into it. Your defence is the same as items 3 and 5: it has no secrets besides its own token, and its output must pass CI and your review. Keep it that way.
+
+## Suggested changes (small PR)
+
+1. Add `--max-budget-usd 1` to `claude_args`.
+2. Optionally add `--allowedTools "Bash(npm test)"`, so it can self-check.
+
+I'd open them as a PR and test with a real `@claude` comment to confirm the action accepts both flags, because I'm not sure about that. Want me to do that, or skip the PR and go straight to the wrap-up?
+
+## You
+
+yes, open the PR with budget and self-check
+
+> **Tool:** Read {"file_path":"c:\\Repositories\\SampleApp\\.github\\workflows\\claude.yml","offset":26}
+
+> Result:
+```
+26	      id-token: write
+27	      actions: read
+28	    steps:
+29	      - uses: actions/checkout@v4
+30	        with:
+31	          fetch-depth: 1
+32	      - uses: anthropics/claude-code-action@v1
+33	        with:
+34	          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+35	          claude_args: |
+36	            --max-turns 8
+37
+```
+
+## Claude
+
+For self-check to work, `npm test` needs dependencies on the VM, and so far the job only does a checkout. So I'm adding a Node setup and `npm ci` before the action, as well as the flags.
+
+> **Tool:** Bash {"command":"git checkout -q -b chore/claude-self-check-budget"}
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\.github\\workflows\\claude.yml","old_string":"          fetch-depth: 1\n      - uses: anthropics/claude-code-action@v1\n        with:\n          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}\n          claude_args: |\n            --max-turns 8","new_string":"          fetch-depth: 1\n      # Dependencies, so Claude ca
+… [truncated 437 chars]
+
+> Result:
+```
+(Bash completed with no output)
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\.github\workflows\claude.yml has been updated successfully.
+```
+
+> **Tool:** Bash {"command":"git diff --stat && git add .github/workflows/claude.yml && git commit -q -m \"Claude action: add budget cap and let it run npm test itself\n\nCo-Authored-By: Claude Sonnet 5.5 <user@example.com>\" && git push -u origin chore/claude-self-check-budget 2>&1 | tail -1 && gh pr create --base main --title \"Claude action: budget cap and self-check\" --body \"Lesson 10, unattended-run ch
+… [truncated 497 chars]
+
+> Result:
+```
+.github/workflows/claude.yml | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+ * [new branch]      chore/claude-self-check-budget -> chore/claude-self-check-budget
+https://github.com/izolotarev/ClaudePractice/pull/17
+test	pass	11s	https://github.com/izolotarev/ClaudePractice/actions/runs/44012070153/job/133801187655
+```
+
+## Claude
+
+PR #17 is open and its `test` check is green: https://github.com/izolotarev/ClaudePractice/pull/17
+
+**What it changes in `claude.yml`**
+- **Setup:** `setup-node` (Node 22, npm cache) and `npm ci` run before the action, so the project's dependencies exist on the VM.
+- **Budget:** `--max-budget-usd 1` caps spend per run, on top of the 8-turn and 15-minute limits.
+- **Self-check:** `--allowedTools "Bash(npm test:*)"` lets Claude run `npm test` and nothing else in the shell.
+
+The `test` check only proves that CI itself is fine. It does not exercise `claude.yml`, because that workflow only runs on an `@claude` mention. I haven't verified that the action accepts both new flags. If it ignores or rejects one, the first `@claude` run will show that.
+
+**How to test it after merging**
+1. I merge the PR with rebase.
+2. We open a small issue, for example "add a test for the empty-todo-list GET", and comment `@claude` on it.
+3. I check the run's log. If the flags work, the log should show a budget limit in the options and a successful `npm test` call before the push.
+
+Each `@claude` run costs a few cents to a few dollars of quota. Shall I merge PR #17 with rebase and run that test? This merge will also start a Deploy run that waits for your approval.
+
+## You
+
+yes, merge PR 17 with rebase and run the test
+
+> **Tool:** Bash {"command":"gh pr merge 17 --rebase --delete-branch 2>&1 | tail -1; git checkout -q main && git pull -q --ff-only; git fetch -q --prune; git log --format='%h %ae %ce %s' -1; grep -n \"GET /api/todos\\|empty\" server/test/api.test.js | head -5; gh issue create --title \"Add test: GET /api/todos returns an empty list on a fresh database\" --body \"Add one server test in server/test/api.test.js: on a
+… [truncated 142 chars]
+
+> Result:
+```
+1 file changed, 8 insertions(+)
+cca6d1c user@example.com user@example.com Claude action: add budget cap and let it run npm test itself
+18:  it('lists empty, then todos oldest first', async () => {
+https://github.com/izolotarev/ClaudePractice/issues/18
+```
+
+> **Tool:** Bash {"command":"gh issue comment 18 --body \"@claude please do this\" | tail -1; sleep 5; id=$(gh run list --workflow claude.yml --limit 5 --json databaseId,conclusion -q 'map(select(.conclusion!=\"skipped\"))[0].databaseId'); echo run $id; timeout 100 bash -c \"until gh run view $id --json status -q .status | grep -q completed; do sleep 5; done\"; gh run view $id --json status,conclusion -q '.status+
+… [truncated 20 chars]
+
+> Result:
+```
+https://github.com/izolotarev/ClaudePractice/issues/18#issuecomment-6937570115
+run 44012310636
+completed failure
+```
+
+## Claude
+
+The run failed. I'm reading the log to see why, starting with the setup and flag lines.
+
+> **Tool:** Bash {"command":"gh run view 44012310636 --log 2>&1 | sed 's/^[^\\t]*\\t[^\\t]*\\t//' | grep -iE \"##\\[error\\]|error|unknown option|budget|allowedTools|max-turns|invalid|npm test|is_error|subtype\" | grep -v \"^\\s*$\" | cut -c1-220 | head -30"}
+
+> Result:
+```
+2026-11-17T03:44:41.9243097Z (node:2386) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued f
+2026-11-17T03:44:46.6945923Z   claude_args: --max-turns 8
+--max-budget-usd 1
+--allowedTools "Bash(npm test:*)"
+2026-11-17T03:44:49.9535388Z   CLAUDE_ARGS: --max-turns 8
+--max-budget-usd 1
+--allowedTools "Bash(npm test:*)"
+  "claude_args": "--max-turns 8\n--max-budget-usd 1\n--allowedTools \"Bash(npm test:*)\"\n",
+2026-11-17T03:44:53.3298151Z Add one server test in server/test/api.test.js: on a fresh in-memory database, GET /api/todos returns 200 and []. Run npm test before you push. Do not change any source files.
+2026-11-17T03:44:53.3418838Z f. If you are unable to comple
+… [truncated 769 chars]
+```
+
+> **Tool:** Bash {"command":"git fetch -q; git branch -r | grep claude; gh issue view 18 --comments | tail -22 | cut -c1-400; gh run view 44012310636 --log 2>&1 | sed 's/^[^\\t]*\\t[^\\t]*\\t//' | grep -E '\"num_turns\"|\"total_cost_usd\"|\"duration_ms\"' | head -4"}
+
+> Result:
+```
+origin/claude/issue-18-20261117-0344
+author:	claude
+association:	none
+edited:	true
+status:	none
+--
+**Claude encountered an error after 28s** —— [View job](https://github.com/izolotarev/ClaudePractice/actions/runs/44012310636) • [`claude/issue-18-20261117-0344`](https://github.com/izolotarev/ClaudePractice/tree/claude/issue-18-20261117-0344) • [Create PR ➔](https://github.com/izolotarev/ClaudePractice/compare/main...claude/issue-18-20261117-0344?quick_pull=1&title=test%3A%20GET%20%2Fap
+
+---
+### Done
+
+- [x] Read the issue and `server/test/api.test.js`
+- [x] Add a test: on a fresh in-memory DB, `GET /api/todos` returns 200 and `[]`
+- [x] Run `npm test`: server 36 passed, client 6 passed
+- [x] Commit and push
+
+I added one test in `server/test/api.test.js` (6 lines) and changed no source files.
+… [truncated 418 chars]
+```
+
+## Claude
+
+The work itself succeeded. I'm checking the diff before summarizing.
+
+> **Tool:** Bash {"command":"git diff main origin/claude/issue-18-20261117-0344 --stat | tail -3; git diff main origin/claude/issue-18-20261117-0344 -- server/test/api.test.js | grep -E \"^[+-]\" | grep -v \"^+++\\|^---\"; git log main..origin/claude/issue-18-20261117-0344 --format='%ae %ce'"}
+
+> Result:
+```
+server/test/api.test.js | 6 ++++++
+ 1 file changed, 6 insertions(+)
++  it('GET /api/todos returns an empty list on a fresh database', async () => {
++    const r = await request(app).get('/api/todos');
++    expect(r.status).toBe(200);
++    expect(r.body).toEqual([]);
++  });
++
+41898282+claude[bot]@users.noreply.github.com 41898282+claude[bot]@users.noreply.github.com
+```
+
+## Claude
+
+The new flags work in practice, but the run was marked failed by a turn limit.
+
+**What the run showed**
+
+| Check | Result |
+|---|---|
+| `--max-budget-usd 1` accepted | **Yes.** It appears in the options passed to Claude. |
+| `--allowedTools "Bash(npm test:*)"` accepted | **Yes.** It shows up as the allowed tool. |
+| Self-check | **Worked.** Claude ran `npm test` before pushing: server 36 passed (it was 35), client 6 passed. |
+| Cost | **$0.115**, about 11 cents against the $1 cap. |
+| Duration | 28 seconds, 9 turns. |
+| Run status | **Failed**, because it used 9 turns and the limit is 8. |
+
+**What it left**
+- **Branch:** `claude/issue-18-20261117-0344` with one commit by `claude[bot]`, no-reply addresses.
+- **Diff:** 6 added lines in `server/test/api.test.js`, one new test, no source changes. It is exactly what the issue asked for.
+- **Duplicate coverage:** the new test overlaps the existing "lists empty, then todos oldest first" test. That was my mistake in picking the issue, not Claude's.
+
+**Two real findings**
+
+1. **The turn limit is too tight now.** The action treats a result that used more turns than `--max-turns` as an error. Self-checking uses extra turns (read, edit, run tests, commit), so 8 is no longer enough. Raising it to about 12 would fix it. The budget and timeout still cap the risk.
+2. **Your hooks run in the Action.** Claude reported that the Prettier hook reformatted the whole test file when it edited it, and it worked around that by reverting and re-applying the change with a script. That confirms the syllabus point that headless runs apply the repo's hooks. It also answers the question I left open earlier. It cost Claude a few turns, which is part of why it went over.
+
+**What I suggest**
+- **Branch #18:** don't open a PR for it. The new test adds nothing the existing one lacks. I'd close issue #18 and delete the branch.
+- **Turn limit:** bump `--max-turns` from 8 to 12 in a small PR, and update the playbook with these findings.
+
+Want me to do both: close the issue with a note, delete the branch, and open the turn-limit PR?
+
+## You
+
+yes, do both
+
+> **Tool:** Bash {"command":"gh issue close 18 --reason \"not planned\" --comment \"Closing: the test already exists ('lists empty, then todos oldest first'), so the branch adds nothing. This issue was only used to test the new claude.yml flags. The run itself worked (budget flag and npm test self-check accepted, cost about \\$0.11) but hit the 8-turn limit; raising it in a follow-up PR.\" 2>&1 | tail -1; git push
+… [truncated 1000 chars]
+
+> Result:
+```
+✓ Closed issue izolotarev/ClaudePractice#18 (Add test: GET /api/todos returns an empty list on a fresh database)
+ - [deleted]         claude/issue-18-20261117-0344
+warning: in the working copy of '.github/workflows/claude.yml', LF will be replaced by CRLF the next time Git touches it
+-            --max-turns 8
++            --max-turns 12
+warning: in the working copy of '.github/workflows/claude.yml', LF will be replaced by CRLF the next time Git touches it
+ * [new branch]      chore/claude-max-turns-12 -> chore/claude-max-turns-12
+https://github.com/izolotarev/ClaudePractice/pull/19
+test	pass	13s	https://github.com/izolotarev/ClaudePractice/actions/runs/44012766637/job/133803446212
+[This command modified 1 file you've previously read: .github\workflows\claude.yml. Call Read before editing.
+… [truncated 1 chars]
+```
+
+## Claude
+
+Both are done.
+
+**Cleanup**
+- **Issue #18:** closed as "not planned", with a comment explaining why. The test already existed, and the run was only a flag check.
+- **Branch `claude/issue-18-...`:** deleted from GitHub. Nothing from it reached `main`.
+
+**PR #19: turn limit 8 → 12**, with the `test` check green: https://github.com/izolotarev/ClaudePractice/pull/19
+- **Change:** one line, `--max-turns 12` in `claude.yml`.
+- **Why 12:** a self-checking run needs about 9 turns, so 12 leaves some room. Spend is still capped by `--max-budget-usd 1` and the 15-minute timeout, so this doesn't open the door to a runaway.
+- **Not tested end to end:** like before, the real proof is another `@claude` run. I haven't run one with 12, so I don't know if a harder task would still fit.
+
+I'd like to merge PR #19 with rebase. Do you want me to? After that, the wrap-up for lesson 10: mark it done in `PROGRESS.md`, write the playbook section (headless, cost numbers, the unattended checklist, and the findings from the `@claude` test), and re-export the transcripts.
+
+## You
+
+yes, merge PR 19 with rebase
+
+> **Tool:** Bash {"command":"gh pr merge 19 --rebase --delete-branch 2>&1 | tail -1; git checkout -q main && git pull -q --ff-only; git fetch -q --prune; git log --format='%h %ae %ce %s' -1; git status -sb | head -2; sleep 10; gh run list --workflow deploy.yml --limit 2"}
+
+> Result:
+```
+1 file changed, 1 insertion(+), 1 deletion(-)
+54e51f4 user@example.com user@example.com Raise Claude action turn limit to 12 so self-check fits
+## main...origin/main
+pending		Raise Claude action turn limit to 12 so self-check fits	Deploy	main	push	44012899461	21s	2026-11-17T03:49:42Z
+waiting		Claude action: add budget cap and let it run npm test itself	Deploy	main	push	44012275161	5m48s	2026-11-17T03:44:15Z
+```
+
+> **Tool:** Bash {"command":"git checkout -q -b docs/lesson-10 && sed -i 's/^| 10 | Headless, cost, wrap-up | not started |/| 10 | Headless, cost, wrap-up | done |/' course/PROGRESS.md && sed -i 's/Lessons done: 1, 2, 3, 4, 5, 6, 7, 8, 9\\./Lessons done: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10./' course/PLAYBOOK.md && cat > \"$TEMP/l10.md\" <<'EOF'\n## Lesson 10: Headless, cost, wrap-up\n\n**Goal:** run Claude without the i
+… [truncated 3690 chars]
+
+> Result:
+```
+158:## Lesson 8: GitHub Actions with Claude
+181:## Lesson 9: Deploy
+206:## Lesson 10: Headless, cost, wrap-up
+241:## Todo app stack (reuse as a template)
+249:## Windows notes
+3:Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.
+14:| 10 | Headless, cost, wrap-up | done |
+[This command modified 1 file you've previously read: course\PROGRESS.md. Call Read before editing.]
+```
+
+> **Tool:** Bash {"command":"sed -n 204,206p course/PLAYBOOK.md | cut -c1-60; sed -n 239,241p course/PLAYBOOK.md | cut -c1-60; node course/export-transcripts.mjs \"C:/Users/USER/.claude/projects/c--Repositories-SampleApp\" course/transcripts 2>&1 | tail -2; grep -rIoE \"user@example|Users[\\\\/]+Igor|key=[A-Za-z0-9_-]{10,}|sk-ant-[A-Za-z0-9_-]+|oauth[A-Za-z_]*[:=] *[A-Za-z0-9_-]{20,}\" course CLAUDE.md .gith
+… [truncated 56 chars]

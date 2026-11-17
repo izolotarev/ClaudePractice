@@ -1,6 +1,6 @@
 # Claude Code playbook
 
-Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6, 7, 8, 9.
+Copy this file into any new project. Updated after each lesson. Lessons done: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.
 
 ## Lesson 1: Operate a session safely
 
@@ -202,6 +202,41 @@ Copy this file into any new project. Updated after each lesson. Lessons done: 1,
 - Auto mode blocks production deploys by default. Keep deploy credentials in GitHub Secrets, out of Claude's reach.
 - In Git Bash, `curl -w "/api/x %{http_code}"` labels can get a path prefix like `C:/Program Files/Git/`: MSYS rewrites strings that look like paths. The request itself is unaffected.
 - Actions `checkout@v4` and `setup-node@v4` currently warn about Node 20; bump the versions in a chore PR when needed.
+
+## Lesson 10: Headless, cost, wrap-up
+
+**Goal:** run Claude without the interactive UI, know what it costs, and set up unattended runs safely.
+
+**Steps that worked:**
+
+1. Headless run: `claude -p "Summarize SPEC.md in 5 bullets" --allowedTools "Read" --output-format json --max-turns 3 --max-budget-usd 0.50`. The JSON has `result`, `num_turns`, `total_cost_usd`, `usage`, `session_id` and `is_error`; scripts read `result` and check `is_error`. Result: 2 turns, 14 s, **$0.08**.
+2. `/effort low` for quick edits, `high` for hard bugs, `/model` to switch. Effort applies to the current session only.
+3. Unattended-run checklist, checked against `claude.yml` (below).
+4. Harden `claude.yml` (PRs #17 and #19): `setup-node` and `npm ci` before the action, then `claude_args` with `--max-turns 12`, `--max-budget-usd 1` and `--allowedTools "Bash(npm test:*)"`.
+5. Test with a throwaway issue and `@claude`: both flags were accepted, Claude ran `npm test` before pushing (server 36 passed), cost **$0.115**.
+
+**Unattended-run checklist:**
+
+| Item | In this repo |
+|---|---|
+| Done criteria | A specific issue plus `SPEC.md` and `CLAUDE.md`. Nothing enforces it. |
+| Self-check | Allow exactly `Bash(npm test:*)` and install dependencies first, otherwise tests can't run. |
+| Allowed scope | The token can push branches but cannot merge: `main` needs a PR and the `test` check, admins included. No other secrets are passed. |
+| Stop limits | `--max-turns`, `--max-budget-usd`, `timeout-minutes`. Turns and minutes limit time, only the budget flag limits money. |
+| Human merge | PR plus required `test`. The rule requires 0 approving reviews, so reading the diff is a habit, not a rule. |
+
+**Facts and gotchas:**
+
+- **A short task still carries a big fixed context.** The 5-bullet summary cost 8 cents: about 17k tokens written to the cache and 69k read back, only 595 output tokens. Claude Code's instructions and your memory files go with every call. `/clear` between tasks.
+- **Cache lifetime:** the usage showed `ephemeral_1h_input_tokens`, so a subscription login gets the 1-hour cache. With an API key it is about 5 minutes.
+- **`--bare` was not tried here.** It skips your login and needs `ANTHROPIC_API_KEY` (billed per token), which was not set. Without `--bare`, `claude -p` loads the repo's hooks and settings.
+- **Repo hooks run inside the Action too.** The Prettier hook reformatted the whole test file Claude edited; Claude reverted and re-applied its change with a script. Expect formatting noise and extra turns.
+- **Self-checking costs turns.** With `--max-turns 8` the run used 9 turns, and the action marked it **failed** ("successful result after 9 turns, exceeding the maximum of 8") although the work was pushed. 12 leaves room for read, edit, test, commit.
+- **A failed run can still leave a good branch.** Check the issue comment and `git branch -r` before assuming nothing happened.
+- **Pick test issues carefully.** The throwaway issue asked for a test that already existed. Check the code before delegating, then close the issue and delete the branch if it adds nothing.
+- Every merge to `main` starts a Deploy run that waits for approval, including workflow-only and docs-only PRs. Approve or reject them from the run page.
+
+**After the course:** parallel work (`claude -w`, worktrees, `/batch`), skills (`.claude/skills/`), prompt-injection testing, team settings. All in the docs at code.claude.com/docs/en.
 
 ## Todo app stack (reuse as a template)
 
