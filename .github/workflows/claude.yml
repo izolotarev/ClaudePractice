@@ -39,6 +39,6 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: |
-            --max-turns 8
+            --max-turns 12
             --max-budget-usd 1
             --allowedTools "Bash(npm test:*)"
