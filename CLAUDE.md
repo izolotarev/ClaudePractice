@@ -25,6 +25,8 @@ Single-list todo app (add, complete, delete). Also a learning project for CI/CD 
 ## Gotchas
 
 - Tests that use a single row hide bugs. A past planted bug (DELETE by list position instead of id) passed every test until a test with gaps in ids was added. Use several rows and out-of-order ids.
+- New behavior is built test first: update `SPEC.md`, write the test, run it and show it fail for the right reason (read the message), then write the smallest code that passes. A test that passes before the code exists proves nothing: break the code on purpose afterwards and check it goes red.
+- The Prettier hook can reformat unrelated lines in files that aren't Prettier-formatted (`client/src/App.jsx`, `client/src/App.test.jsx`, `server/test/api.test.js`). Check `git diff --stat` after edits; for those files apply changes with a script so the diff holds only the feature.
 - Windows: write multi-file changes with the Write tool, not long shell heredocs. Stop a server by its port's process ID, never kill all `node` processes.
 
 ## Hooks and permissions (`.claude/settings.json`)
