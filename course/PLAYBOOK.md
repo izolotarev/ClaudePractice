@@ -259,6 +259,28 @@ Built "clear completed" twice, API first (PR #22), then the button (PR #23).
 - **Green is not "correct".** It only means the tests you wrote pass. Mocked-`fetch` UI tests cannot show layout or real behavior, so click the feature in a browser after the deploy.
 - **Check the live data before testing a destructive endpoint.** `DELETE /api/todos/completed` removes every done todo. Read `GET /api/todos` first and use a throwaway todo.
 
+**Test first or code first?** Default to test first, and use code first on purpose.
+
+| Situation | Approach | Why |
+|---|---|---|
+| Clear, checkable behavior: API rules, validation, component state, bug fixes | **Test first** | The failing test is a target I can't fudge; it exposes wrong guesses early (the swallowed route) |
+| Exploring or prototyping, unsure what you want | Code first, then rewrite test first | Learn from a throwaway, then build it properly |
+| Glue and config: `index.js`, workflows, deploy settings | Code first, then add the check that would have caught it | Unit tests don't reach it; the `client/distt` break passed every test. Use the smoke test and a real run |
+| Layout and styling | Build, then look in a browser | Tests can't judge appearance |
+| A bug you can't reproduce | Find the cause in the running app first, then write the test that fails because of it | You need a reproduction before a meaningful red test |
+| Large code with no tests | Add tests around current behavior first, then change it | A safety net before edits |
+
+**Why test first suits Claude in particular:** I stop when work looks finished, so a failing test is a definition of done I can check. Tests I write after the code tend to copy my bugs. Four short tests are also the cheapest thing for you to review.
+
+**How to ask (two turns you can inspect):**
+
+1. `Update SPEC.md, then write the tests only, run them, and show me the failure. Don't write the feature yet.`
+2. `Now write the smallest code that passes, and run the full suite.`
+
+The Stop hook blocks a red turn, so unless you switch it off briefly, red and green happen in one turn. Ask for the failure output in my message so you still see the red step.
+
+**Avoid:** tests and code in the same breath with no test run in between (a test can pass without ever being red); treating green as correct; testing trivia such as whether `setError('')` is called. Test what a user or caller can see.
+
 ## Todo app stack (reuse as a template)
 
 - Root `package.json` with npm workspaces `client` and `server`; scripts `build`, `start`, `test`, `dev`.

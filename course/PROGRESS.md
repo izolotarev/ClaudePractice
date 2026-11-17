@@ -12,3 +12,4 @@
 | 8 | GitHub Actions with Claude | done |
 | 9 | Deploy | done |
 | 10 | Headless, cost, wrap-up | done |
+| Extra | Test first (TDD) | done |

@@ -83,7 +83,8 @@ Create it at the repo root (`/init` can draft it, then trim). Keep it short, bec
 
 - [ ] **[claude]** Plan first, then build in small steps: server, then client.
 - [ ] Keep the app factory separate from the entry point, for example `createApp(db, options)` in `app.js` and only wiring in `index.js`. Tests then run against an in-memory database with no network.
-- [ ] Tests must cover **every route, success and each error case**, using **several rows and out-of-order ids**. Prove a new test is real: plant a bug, watch the test fail, remove the bug, watch it pass.
+- [ ] **Build behavior test first.** Write the test, run it, read the failure (it must fail for the right reason, not a typo or import error), then write the smallest code that passes. Ask: `Write the tests only, run them, and show me the failure. Don't write the feature yet.`, then `Now write the smallest code that passes, and run the full suite.` Go code first only on purpose, for exploring, glue and config, visuals, or a bug you can't reproduce yet, and then add the check that would have caught it (see the table in `course/PLAYBOOK.md`).
+- [ ] Tests must cover **every route, success and each error case**, using **several rows and out-of-order ids**. Prove a new test is real: plant a bug, watch the test fail, remove the bug, watch it pass. A test that passes before the code exists proves nothing, so break the code on purpose afterwards to check it.
 - [ ] Root `package.json` with workspaces and scripts `build`, `start`, `test`, `dev`. `npm test` must run everything.
 - [ ] Verify yourself in a real browser: `npm run build && npm start`, then add, complete, delete, reload.
 - [ ] Remember the blind spot: files that tests don't import (such as `index.js`) can break production unnoticed. Keep them tiny.
@@ -324,7 +325,7 @@ Every merge to `main` starts a deploy run that waits for approval, even docs-onl
 
 1. `git checkout main && git pull`, then `git checkout -b feat/<short-name>`.
 2. Update `SPEC.md` first if behavior, API or limits change.
-3. **[claude]** Make the change, with a test that uses several rows and out-of-order ids. A hook runs Prettier on each edit, and the Stop hook blocks finishing while `npm test` fails.
+3. **[claude]** **Red:** write the tests only (several rows, gapped and out-of-order ids), run them, and show the failure. **Green:** write the smallest code that passes and run `npm test`. **Guard check:** break the code on purpose, see a test go red, restore. A hook runs Prettier on each edit, which can reformat unrelated lines in files that aren't Prettier-formatted (use a script for those files and check `git diff --stat`). The Stop hook blocks finishing while `npm test` fails, so red and green happen in one turn.
 4. Ask the `reviewer` agent to check the diff against `SPEC.md`. Treat its "not checked" lines as follow-ups.
 5. Check in the running app if the UI or API changed.
 6. Commit (end the message with Claude's co-author line if you use it), push, `gh pr create` using the template.
@@ -354,6 +355,8 @@ Before letting anything run unattended, check:
 ## Gotchas collected from the course
 
 - **Tests with one row hide bugs.** Use several rows and out-of-order ids.
+- **A test that has never failed has not been shown to work.** See it red first, for the right reason, and break the code on purpose after green. A test that passes before the code exists proves nothing.
+- **Green only means the tests you wrote pass.** Mocked UI tests can't show layout or real behavior, so click the feature in a browser after the deploy.
 - **Files tests don't import can break production.** A wrong static path in `index.js` passed CI and a health-only smoke test, and took the home page down.
 - **A health-only smoke test misses real outages.** Check the page and a data route.
 - **Pick a demo break that passes CI.** A broken health route fails the required check and can never merge.
