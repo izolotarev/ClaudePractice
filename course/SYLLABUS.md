@@ -142,7 +142,7 @@ You build one app (a todo web app, Node + Express + Vitest) and ship it through 
 **Do:**
 1. Pick a small feature with real logic (we used "clear completed": `DELETE /api/todos/completed`, then the button).
 2. Update `SPEC.md` first.
-3. Ask: `Write the tests only, run them, and show me the failure. Don't write the feature yet.` Read the failure message: it must fail for the right reason, not a typo or import error.
+3. Ask: `Write the tests only, run them, and show me the failure. Explain each test in one plain sentence. Don't write the feature yet.` Read the failure message: it must fail for the right reason, not a typo or import error.
 4. Ask: `Now write the smallest code that passes, and run the full suite.`
 5. Break the code on purpose, watch the tests go red, restore.
 6. Have the reviewer check the diff against `SPEC.md`, open the PR, merge, deploy, try it in the browser.
@@ -150,6 +150,8 @@ You build one app (a todo web app, Node + Express + Vitest) and ship it through 
 **Key facts:**
 - **Test first for:** clear behavior you can check in code (API rules, validation, component state, bug fixes).
 - **Code first, then add the check, for:** exploring or prototyping, glue and config (`index.js`, workflows, deploy settings), visual work, and a bug you can't reproduce yet (find the cause by running the real app, then write the test that fails because of it).
+- You don't need to be a testing expert. I write the tests; you describe the behavior, read the test names and the failure, and try the feature. If unsure about the tests, ask: `List what each new test checks in one plain sentence, and which case isn't covered.`
+- If a task feels too big to describe, split it. A feature you can state in a few sentences is one you can check.
 - A test that passes before the code exists proves nothing. Break the code to check it.
 - Green only means the tests you wrote pass. Try the real thing in a browser.
 - The Stop hook blocks a red turn, so red and green happen in the same turn. Ask me to show the failure output in my message.
