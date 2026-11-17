@@ -238,6 +238,27 @@ Copy this file into any new project. Updated after each lesson. Lessons done: 1,
 
 **After the course:** parallel work (`claude -w`, worktrees, `/batch`), skills (`.claude/skills/`), prompt-injection testing, team settings. All in the docs at code.claude.com/docs/en.
 
+## TDD: red-green on a real feature (after the course)
+
+Built "clear completed" twice, API first (PR #22), then the button (PR #23).
+
+**The cycle:**
+
+1. **Spec first.** Add the behavior to `SPEC.md` (API row, UI bullet, the Features line).
+2. **Red.** Write the tests only, no production code. Use several rows, gapped ids and out-of-order state. Run them and read the failure: it must fail for the right reason (`expected 404 to be 200`, `Unable to find role="button" and name "Clear completed"`), not a typo or import error.
+3. **Green.** Write the smallest code that passes, then run the full suite (`npm test`).
+4. **Guard check.** Break the code on purpose, see the tests go red, restore. Here: route moved after `/:id` (3 server tests failed), button always visible, list not updated, wrong URL (each caught by a client test).
+5. **Review.** The `reviewer` agent compares the diff with `SPEC.md`; it only reads, so run the tests yourself. Then PR, required `test`, rebase merge, approved deploy, check the live site.
+
+**Facts and gotchas:**
+
+- **A test that passes before the code exists proves nothing.** "Hides the button while nothing is done" passed in the red step because no button existed. It only means something after you make the button always visible and watch it fail.
+- **Read the red message.** A route named `completed` was swallowed by `/api/todos/:id` and answered 404. The test found it before any code existed. The fix is registering the route before `/:id`, with a comment saying why.
+- **The Prettier hook adds noise.** It fires on every Edit and Write and can reformat a whole file that isn't Prettier-formatted (`client/src/App.jsx`, `client/src/App.test.jsx`, `server/test/api.test.js`). It rewrote 10 unrelated lines of the server test file. Check `git diff --stat`; for those files apply the change with a script (the hook does not fire for shell edits) so the diff holds only the feature.
+- **The Stop hook blocks a red turn.** It stops me finishing while tests fail, so the red-to-green step must complete inside one turn. A red test cannot be left on a branch between turns.
+- **Green is not "correct".** It only means the tests you wrote pass. Mocked-`fetch` UI tests cannot show layout or real behavior, so click the feature in a browser after the deploy.
+- **Check the live data before testing a destructive endpoint.** `DELETE /api/todos/completed` removes every done todo. Read `GET /api/todos` first and use a throwaway todo.
+
 ## Todo app stack (reuse as a template)
 
 - Root `package.json` with npm workspaces `client` and `server`; scripts `build`, `start`, `test`, `dev`.
