@@ -136,5 +136,24 @@ You build one app (a todo web app, Node + Express + Vitest) and ship it through 
 - Unattended-run checklist: done criteria, self-check, allowed scope, stop limits (`--max-turns`, `--max-budget-usd`), human merge.
 - Cache is about 1 hour on a subscription, 5 minutes on API key; `/clear` between tasks saves tokens.
 
+## Extra: Test first (TDD) (30 min)
+**Goal:** build a feature so every test has been seen to fail first.
+**Why:** I stop when work looks finished. A test I wrote before the code, and watched fail, is a target I can't fudge. A test written after the code tends to confirm the code, including its mistakes.
+**Do:**
+1. Pick a small feature with real logic (we used "clear completed": `DELETE /api/todos/completed`, then the button).
+2. Update `SPEC.md` first.
+3. Ask: `Write the tests only, run them, and show me the failure. Don't write the feature yet.` Read the failure message: it must fail for the right reason, not a typo or import error.
+4. Ask: `Now write the smallest code that passes, and run the full suite.`
+5. Break the code on purpose, watch the tests go red, restore.
+6. Have the reviewer check the diff against `SPEC.md`, open the PR, merge, deploy, try it in the browser.
+**Done when:** you saw red for the right reason, then green, and a deliberate break turned a test red again.
+**Key facts:**
+- **Test first for:** clear behavior you can check in code (API rules, validation, component state, bug fixes).
+- **Code first, then add the check, for:** exploring or prototyping, glue and config (`index.js`, workflows, deploy settings), visual work, and a bug you can't reproduce yet (find the cause by running the real app, then write the test that fails because of it).
+- A test that passes before the code exists proves nothing. Break the code to check it.
+- Green only means the tests you wrote pass. Try the real thing in a browser.
+- The Stop hook blocks a red turn, so red and green happen in the same turn. Ask me to show the failure output in my message.
+- The Prettier hook can reformat unrelated lines. Check `git diff --stat`; use a script for files that aren't Prettier-formatted.
+
 ## After the course
 Parallel work (`claude -w`, worktrees, `/batch`), skills (`.claude/skills/`), prompt-injection testing, team settings. All in the docs under code.claude.com/docs/en.
