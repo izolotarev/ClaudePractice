@@ -157,5 +157,26 @@ You build one app (a todo web app, Node + Express + Vitest) and ship it through 
 - The Stop hook blocks a red turn, so red and green happen in the same turn. Ask me to show the failure output in my message.
 - The Prettier hook can reformat unrelated lines. Check `git diff --stat`; use a script for files that aren't Prettier-formatted.
 
+## Extra: Review with /code-review (30 min)
+**Goal:** get an independent bug hunt on a diff, and know when to use it instead of the `reviewer` agent.
+**Why:** tests only check what you thought of. A reviewer that never saw the code being written can spot what you and I missed.
+**Do (on a practice branch you will not merge):**
+1. `git switch -c fix/review-practice`. Ask me to add a small change with a subtle bug that no test covers (for example an off-by-one in the 200-character limit). Run `npm test` and confirm it stays green, then commit it. The review looks at commits, so a clean commit gives a clean diff.
+2. Type `/code-review`. It runs in the background and the findings arrive in the chat. Did it find the bug?
+3. Run `/code-review low`, then `/code-review high`. Compare: `low` reports fewer, surer findings; higher levels cast a wider net. Note that the level you typed is remembered for the next run.
+4. Point it at a target: `/code-review main...fix/review-practice`, or a PR number once a PR exists.
+5. Run the `reviewer` agent on the same change: `have the reviewer check this against @SPEC.md`. Compare what each one found.
+6. Run `/code-review --fix`. Look at `git diff` and decide whether to keep the fix. Undo with git, not `/rewind`.
+7. Delete the practice branch.
+**Done when:** you saw the review catch (or miss) the planted bug at two effort levels, applied a fix with `--fix` and checked it with `git diff`, and can say when you'd use `/code-review` and when the `reviewer`.
+**Key facts:**
+- `/code-review` hunts for bugs in a diff and reads your `CLAUDE.md`. It does not read `SPEC.md` unless you name it, and it does not read `REVIEW.md`. The `reviewer` agent checks changes against the spec and cannot edit (`tools: Read, Grep, Glob`).
+- With no target it reviews your branch's commits ahead of its upstream plus uncommitted changes. Other targets: a PR number, `main...branch`, a commit range, a path.
+- `--fix` applies the findings to your working tree through your permission mode. A background review's edits are outside `/rewind` checkpoints, so commit first and use git to undo.
+- `--comment` posts the findings on a GitHub PR as inline comments. `ultra` runs a deeper cloud review and needs a claude.ai login.
+- You can type it, and Claude can also start it when you ask for a review in plain words. To stop that, set `"skillOverrides": {"code-review": "user-invocable-only"}`.
+- It runs in your session and counts toward your usage. The managed Code Review service on GitHub is a different product: an Owner turns it on, it reads `REVIEW.md`, and it is billed separately through usage credits.
+- Findings are marked Important (a bug to fix before merge), Nit (minor, optional) or Pre-existing (not caused by this change). Say "skip style" in your own review prompts, or a reviewer will always find something.
+
 ## After the course
 Parallel work (`claude -w`, worktrees, `/batch`), skills (`.claude/skills/`), prompt-injection testing, team settings. All in the docs under code.claude.com/docs/en.

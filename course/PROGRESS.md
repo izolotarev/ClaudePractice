@@ -13,3 +13,4 @@
 | 9 | Deploy | done |
 | 10 | Headless, cost, wrap-up | done |
 | Extra | Test first (TDD) | done |
+| Extra | Review with /code-review | not started |
