@@ -8601,3 +8601,362 @@ The docs diff is clean: 40 added lines and 4 changed ones, with no Prettier nois
 
 > **Tool:** Bash {"command":"src=\"$(cygpath -w \"$HOME/.claude/projects/c--Repositories-SampleApp\")\" && node course/export-transcripts.mjs \"$src\" course/transcripts 2>&1 | tail -5; ls course/transcripts; git status --short | head; echo \"--- leak check ---\"; grep -rIl -E \"izolotarev@(hotmail|gmail)|hotmail\\.com|Users[\\\\/]+Igor\" course/transcripts || echo \"no emails or profile paths found\"","descriptio
 … [truncated 70 chars]
+
+> Result:
+```
+session-3.md 2026-11-14T21:29:28.330Z 1684 blocks
+session-4.md 2026-11-15T09:52:31.628Z 119 blocks
+session-5.md 2026-11-15T11:27:37.913Z 461 blocks
+session-6.md 2026-11-15T21:30:09.456Z 2969 blocks
+session-7.md 2026-11-17T03:31:08.410Z 19 blocks
+session-1.md
+session-2.md
+session-3.md
+session-4.md
+session-5.md
+session-6.md
+session-7.md
+ M course/NEW-PROJECT-GUIDE.md
+ M course/PLAYBOOK.md
+ M course/PROGRESS.md
+ M course/transcripts/session-6.md
+--- leak check ---
+no emails or profile paths found
+```
+
+## Claude
+
+Only `session-6.md` changed, which is the current session. The scan found no emails or profile paths. I'll commit and open the PR.
+
+> **Tool:** Bash {"command":"git diff --stat -- course/transcripts && git add course/NEW-PROJECT-GUIDE.md course/PLAYBOOK.md course/PROGRESS.md course/transcripts/session-6.md && git commit -q -F - <<'EOF'\nFinish /code-review lesson: playbook, guide, progress, transcripts\n\n- PLAYBOOK: new \"Review with /code-review\" section with what each tool found\n  on the planted ordering bug; correct the \"Claude cannot l
+… [truncated 1336 chars]
+
+> Result:
+```
+warning: in the working copy of 'course/transcripts/session-6.md', LF will be replaced by CRLF the next time Git touches it
+ course/transcripts/session-6.md | 3104 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 3104 insertions(+)
+warning: in the working copy of 'course/transcripts/session-6.md', LF will be replaced by CRLF the next time Git touches it
+41898282+claude[bot]@users.noreply.github.com user@example.com
+user@example.com user@example.com
+user@example.com user@example.com
+remote:      https://github.com/izolotarev/ClaudePractice/pull/new/docs/code-review-lesson-wrapup        
+remote: 
+https://github.com/izolotarev/ClaudePractice/pull/28
+```
+
+## Claude
+
+PR #28 is open: https://github.com/izolotarev/ClaudePractice/pull/28
+
+**What's in it**
+- **[course/PLAYBOOK.md](course/PLAYBOOK.md):** a new "Review with /code-review" section. It has the results table (default, `low`, `high`, a path target, and the `reviewer` agent), the gotchas, where the review fits in the workflow, and a "not covered" list. In the "Not covered" list I recorded what we didn't verify: the explicit `main...branch` target, a PR number, `--comment`, `ultra`, and the managed service.
+- **Correction:** the playbook and [course/NEW-PROJECT-GUIDE.md](course/NEW-PROJECT-GUIDE.md) no longer say Claude can't launch `/code-review`. They now say you can type it and Claude can also start it when asked in plain words.
+- **Guide step:** Phase 10 of the guide now has a `/code-review` step after the `reviewer` check. It says when to use `low` or `high`, to skip it for docs-only PRs, and that it's advice and not a gate.
+- **[course/PROGRESS.md](course/PROGRESS.md):** the extra lesson is marked done.
+- **Transcripts:** only `session-6.md` changed (this session). A scan for emails and profile paths found none.
+
+**One honest gap:** you never told me what `--fix` did. The branch was clean afterwards, so the playbook says "no `--fix` edits were observed" rather than describing something I didn't see.
+
+**Checks:** commit emails are all no-reply addresses. The diff is docs only, with no app code changed. I haven't merged it, and the required `test` check will run first.
+
+When you're ready, tell me to merge PR 28 with rebase, then approve the deploy as usual.
+
+## You
+
+yes, merge PR 28 with rebase
+
+> **Tool:** Bash {"command":"gh pr checks 28 2>&1 | head -5; gh pr view 28 --json state,mergeable,mergeStateStatus --jq '{state,mergeable,mergeStateStatus}'","description":"Check PR 28 status and required check"}
+
+> Result:
+```
+test	pass	15s	https://github.com/izolotarev/ClaudePractice/actions/runs/44906441240/job/136852927590	
+{"mergeStateStatus":"CLEAN","mergeable":"MERGEABLE","state":"OPEN"}
+```
+
+> **Tool:** Bash {"command":"gh pr merge 28 --rebase --delete-branch 2>&1 | tail -3; git switch -q main && git pull -q --ff-only && git fetch -q --prune && git log -1 --format='%h %s' && git log --all --format='%ae %ce' | sort -u && git branch -a && git status -sb | head -2","description":"Rebase-merge PR 28, sync main, prune, check emails"}
+
+> Result:
+```
+course/PROGRESS.md              |    2 +-
+ course/transcripts/session-6.md | 3104 +++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 3144 insertions(+), 4 deletions(-)
+cdf4853 Finish /code-review lesson: playbook, guide, progress, transcripts
+41898282+claude[bot]@users.noreply.github.com user@example.com
+user@example.com user@example.com
+user@example.com user@example.com
+* main
+  remotes/origin/main
+## main...origin/main
+```
+
+## Claude
+
+PR #28 is merged with rebase.
+
+- **Commit on `main`:** `cdf4853`. The `test` check had passed and the PR was clean to merge.
+- **Local repo:** `main` is in sync with `origin/main`, and the merged branch is gone locally and remotely. Only `main` is left.
+- **Emails:** every author and committer email is still a no-reply address, so the rebase merge didn't write your real one.
+
+A Deploy run should now be waiting for your approval in the GitHub Actions tab. This change is docs and transcripts only, so the live app won't change. Tell me once you've approved and I'll check the run.
+
+The `/code-review` extra lesson is now finished and recorded in the syllabus, progress file, playbook and guide.
+
+## You
+
+yes, merge PR 28 with rebase
+
+> **Tool:** Bash {"command":"gh pr view 28 --json state,mergedAt,mergeCommit --jq '{state,mergedAt}' && git log -1 --format='%h %s' origin/main && gh run list --workflow=deploy.yml --limit 1 --json status,conclusion,displayTitle --jq '.[0]'","description":"Confirm PR 28 is already merged and check the deploy run"}
+
+> Result:
+```
+The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed. Correction to the text above: this call was stopped while running, not refused before it ran. It may have run in part or in full, and its changes may have been written. No permission prompt was involved. Work it started elsewhere (a remote command, a background process) may still be running, so check before starting the same work again. The instruction to stop and wait still stands.
+
+Note: The user's next message may contain a correction or preference. Pay close attention — if they explain what went wrong or how they'd prefer you to work, consider saving that to memor
+… [truncated 22 chars]
+```
+
+## You
+
+[Request interrupted by user for tool use]
+
+## You
+
+approved, check the deploy
+
+> **Tool:** Bash {"command":"id=$(gh run list --workflow=deploy.yml --limit 1 --json databaseId --jq '.[0].databaseId') && timeout 500 gh run watch \"$id\" --exit-status >/dev/null 2>&1; gh run view \"$id\" --json status,conclusion,headSha,displayTitle --jq '{status,conclusion,headSha,displayTitle}'; gh run view \"$id\" --log 2>&1 | grep \"Smoke test\" | sed 's/\\x1b\\[[0-9;]*m//g' | grep -E \"Z (Attempt|Smoke tes
+… [truncated 300 chars]
+
+> Result:
+```
+{"conclusion":"success","displayTitle":"Finish /code-review lesson: playbook, guide, progress, transcripts","headSha":"cdf48532364c3ea09993d5a60f6c9a9b6200dca4","status":"completed"}
+deploy	Smoke test	2026-11-21T12:59:26.2807976Z Smoke test passed on attempt 1
+deploy	Trigger Render deploy	2026-11-21T12:59:25.6926940Z Deploy requested for cdf48532364c3ea09993d5a60f6c9a9b6200dca4
+MERGED
+```
+
+## Claude
+
+The Deploy run for PR #28 succeeded.
+
+- **Commit deployed:** `cdf4853`, "Finish /code-review lesson: playbook, guide, progress, transcripts". It was requested through the Render hook.
+- **Smoke test:** passed on attempt 1, about a second after the request. Since this PR changed only docs, Render didn't have to rebuild anything meaningful, so the app answered right away.
+- **App code:** unchanged, and the Clear completed feature is still live.
+
+About your repeated "merge PR 28": PR #28 was already merged when it arrived, so I didn't merge it again. The status check I ran for it was interrupted. This run confirms it: the PR state is `MERGED`, and the deploy is for the merge commit `cdf4853`. Nothing was merged twice.
+
+`main` is clean and in sync, and no approvals are pending. The `/code-review` lesson is finished and deployed with the rest of the course notes.
+
+## You
+
+Did you include code-review in workflow?
+
+## Claude
+
+Only in the written notes. It isn't enforced anywhere, and nothing reminds me to do it.
+
+**What I added**
+- **[course/NEW-PROJECT-GUIDE.md](course/NEW-PROJECT-GUIDE.md), Phase 10 ("The loop for every change"):** step 4 now says to run the `reviewer`, then commit and run `/code-review` once. It says `low` for small changes, `high` for risky code, skip docs-only PRs, and treat it as advice, not a gate.
+- **[course/PLAYBOOK.md](course/PLAYBOOK.md):** the new section has a "Where it fits" line with the same order.
+- **[course/SYLLABUS.md](course/SYLLABUS.md):** the lesson itself.
+
+**What I did not add**
+- **`CLAUDE.md`:** it has no `/code-review` rule. I read this session's `CLAUDE.md` as saying nothing about reviews, so I won't start one on my own in a future session. The test-first rule is in there, but the review step isn't.
+- **`.github/workflows/`:** no review job. A PR gets only the required `test` check, and `@claude` runs only when someone comments.
+- **Hooks:** nothing in `.claude/settings.json` triggers it.
+- **Branch protection:** unchanged. It doesn't require a review.
+
+So today it's a habit that depends on you remembering, or on you asking me. That fits the advice from the earlier answer (a reminder first, automation later), but it's the weakest option.
+
+**Ways to make it stick, from light to heavy**
+
+| Option | What it does | Cost |
+|---|---|---|
+| Add one line to `CLAUDE.md`, such as "Before opening a PR for code changes, commit, run `/code-review`, and summarise the findings" | I'd follow it most of the time, and Claude can start the command itself | Low. Not a guarantee, and it adds a line to every session's context |
+| Add it to the PR template as a checkbox ("ran /code-review, findings triaged") | You see it each time you open a PR | Low. A human reminder |
+| An automatic review job in GitHub Actions on each PR | Findings appear as PR comments with no manual step | Medium. Costs per push, needs stop limits, and can collide with `@claude` comments |
+
+I'd start with the `CLAUDE.md` line and the PR template checkbox. Leave out the automatic job and branch protection until you've seen the findings are consistently useful, since the review isn't deterministic and a required review would sometimes block on a wrong finding.
+
+Should I add the `CLAUDE.md` line and the PR template checkbox? It would be one small docs PR.
+
+## You
+
+How would you recommend me to use this command in my work?
+
+## Claude
+
+Use it as a second opinion before you open a PR, not as a gate and not on every edit. These are the rules I'd follow, based on what we saw in the lesson.
+
+## The routine
+
+1. **Finish the work first.** Tests green, guard check done, and a spec check from the `reviewer` agent if the change has a spec.
+2. **Commit.** The review reads commits, and a clean commit gives a clean diff. It also protects you if you try `--fix`.
+3. **Run it once**, with the level on purpose:
+   - `/code-review low` for small or routine changes.
+   - `/code-review high` for risky code: anything that stores or deletes data, validation, auth, deploy or workflow changes.
+4. **Triage every finding yourself:**
+   - **Important** (a real bug): confirm it, and ideally turn it into a failing test, then fix.
+   - **Nit** (minor): skip unless it's quick.
+   - **Pre-existing:** note it for later and leave it out of this PR.
+   - **Wrong or odd:** ignore it. Our runs had a finding that misread "ordering" in the spec three times.
+5. **Then open the PR** and let CI, your own read of the diff and the browser check do their normal jobs.
+
+## When to skip it
+
+- **Docs-only PRs** (like #26 to #28). There's no code to find bugs in.
+- **Tiny edits** such as a typo or a text change.
+- **While the code is half-written.** Review a finished commit, not work in progress.
+- **After every small commit.** It uses your session usage, and one review per PR is enough.
+
+## Which tool for which job
+
+| Situation | Use |
+|---|---|
+| A feature with a spec | The `reviewer` agent first (it checks requirements and tells you what is fine), then `/code-review` |
+| Any other code change | `/code-review low`, or `high` if risky |
+| Auditing an old area you didn't touch | `/code-review <path>`, and expect speculative findings |
+| You'd like fixes applied | `/code-review low --fix` after committing. Check `git diff` and `npm test` |
+| You want PR comments | `--comment`, only when a PR exists and you want others to see it |
+
+## Habits that make it worth it
+
+- **Use it to improve your tests.** The most valuable output in the lesson was a test idea: add `'c'`, `'a'`, `'b'` and expect that order. When a finding points to a weak test, write the stronger test and watch it fail first.
+- **Run `low` first, then `high` only if the change is risky.** In our lesson `low` found the real bug in one short paragraph, while `high` added mostly minor points.
+- **Type the level.** The last level you typed is remembered, even next session. A forgotten `high` makes every later review noisier and costlier.
+- **Give it good context.** Keep `CLAUDE.md` pointing at `SPEC.md` and the test rules. The reviews cited both, and they were more useful when they did.
+- **Treat "found nothing" carefully.** It's a good sign and not proof. Both reviews and tests can miss things, so still read the diff and try the feature.
+- **Pair it with your own read.** You know what the feature is supposed to do. The tool knows common bug patterns.
+
+## What it can't replace
+
+- **Tests and CI.** These are deterministic gates. The review varies between runs (5 findings, then 4) and can miss things, so don't make it a requirement.
+- **Your judgment.** You decide what's real, and you approve the merge.
+- **Trying it in a browser.** A review reads code and can't tell you how the app feels.
+
+## Cost
+
+It counts toward your normal session usage. One `low` review per PR is cheap. `high` on a large diff costs more, and `ultra` (a cloud review) costs more again. If you're watching usage, check `/usage` after a few reviews to see what it takes.
+
+## A starting setup
+
+1. Do the routine above for every code PR for a few weeks.
+2. Keep a note of how many findings were real. If most are, make it a stronger habit (a `CLAUDE.md` line, a PR template checkbox).
+3. If very few are real, drop to `low` only, or use it just for risky changes.
+4. Only after that, consider an automatic PR review in GitHub Actions, with stop limits.
+
+The one-sentence version: commit, run `/code-review low` once per code PR (`high` for risky code), fix what's real, turn real findings into tests, and keep tests, CI and your own approval as the actual gates.
+
+## You
+
+Where I as a human should review the code?
+
+## Claude
+
+Review in the PR, on GitHub's "Files changed" tab, before you merge. That's the last point where reading costs little and a mistake isn't live yet. But you also have checkpoints earlier in the flow, and some of them matter more than reading code.
+
+## Your checkpoints, in order
+
+| When | Where | What you check |
+|---|---|---|
+| Before any code | `SPEC.md` | Is the behavior what you actually want? This is the highest-value review, because everything else is checked against it. |
+| Red step | Test names and the failure message | Do the names match what you asked for? Does the failure say something sensible (`expected 404 to be 200`, not a typo)? |
+| After the change | The PR's "Files changed" tab | The diff, as described below |
+| Before merging | The PR's checks | The required `test` check is green |
+| Deploy | The Actions approval screen | Is this the commit you expect, and is it safe to ship? |
+| After the deploy | The live site | Does the feature actually work in a browser? |
+
+The PR diff is the only point on that list where you read code, which is why it's the one the guide calls out ("Read the diff yourself").
+
+## How to read the PR diff
+
+Don't start at the top of the file list. Use this order:
+
+1. **The PR description and commit title.** Does it say what changed and why? A vague title like "Tidy query" for a behavior change is a warning sign. (That's what the planted bug used.)
+2. **The `SPEC.md` change**, if any. Is the behavior you approved the one described?
+3. **The tests.** Do they cover several rows and out-of-order cases? Would they go red if the code broke? A weak test is a bigger risk than odd-looking code.
+4. **The production code**, looking at what changed, not every line.
+5. **Anything outside the feature.** Unrelated edits, reformatting noise (check `git diff --stat`), new dependencies, config changes.
+
+## Read closely when the change touches
+
+- **Data that is deleted, overwritten or stored.** Our `DELETE` routes, anything with `WHERE`. A wrong condition is silent data loss.
+- **Validation and limits.** The 200-character rule, id parsing.
+- **Workflows and deploy files:** `.github/workflows/*`, the Render hook, smoke test. Tests don't cover these. The `client/distt` typo passed every test.
+- **Permissions and hooks:** `.claude/settings.json`, deny rules, the Stop and Prettier hooks. A loosened rule is easy to miss.
+- **Secrets and credentials.** Nothing like a token or `.env` content in the diff.
+- **`CLAUDE.md` and instruction files.** They shape what I do in every session, so changes there deserve a careful read.
+- **Dependencies.** New packages in `package.json` and why.
+
+## Skim, don't dwell, on
+
+- Docs-only changes: read the summary and the lines that matter.
+- Mechanical test additions, once the failure message made sense and the suite is green.
+- Formatting. Prettier handles it.
+
+## Questions to ask while reading
+
+- Does this do only what the PR says?
+- What happens with an empty list, a very large value, a missing id, or two requests at once?
+- Could this delete or expose something it shouldn't?
+- Would I notice if this broke? Is there a test or smoke check that would?
+- If this is wrong in production, how do I undo it? (Ours: a revert PR.)
+
+## What I can't check for you
+
+Tests, `/code-review` and the `reviewer` agent read code and run checks. They can't tell whether the feature is the right one, whether it feels right to use, or whether a plausible-looking change quietly breaks something nobody tested. That's your job, and it's why you also open the live site.
+
+## Making it manageable
+
+- **Keep PRs small.** One behavior per PR, as we did with the API and the button separately. A diff you can read in five minutes gets read properly.
+- **Ask me to explain.** If part of the diff isn't clear, ask `explain what this change does and what could go wrong`. Check the explanation against the code.
+- **Decide how much you need.** For the todo app, a close read of data-touching code and workflows, and a skim of the rest, is reasonable. For anything with real users or money, review more carefully, or get a second person.
+
+The short rule: you must personally review the spec, the test names and failures, the PR diff for risky areas, the deploy approval and the live behavior. Everything else can lean on the tools, and the tools support your review, not the other way around.
+
+## You
+
+Add this knowledge to the files
+
+> **Tool:** Bash {"command":"git status -sb | head -2 && git switch -c docs/human-review-guidance","description":"Create branch for the human-review guidance docs"}
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\PLAYBOOK.md","old_string":"**Turn a finding into a test.** The reviewer's suggestion is the regression test for this bug","new_string":"**Which tool for which job:**\n\n| Situation | Use |\n|---|---|\n| A feature with a spec | The `reviewer` agent first (it checks requirements and says what is fine), then `/code-review` |\n| An
+… [truncated 630 chars]
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\PLAYBOOK.md","old_string":"## Todo app stack (reuse as a template)","new_string":"## Where you review as a human\n\nTests, `/code-review` and the `reviewer` agent support your review. They do not replace it. They cannot tell whether the feature is the right one, how it feels to use, or whether a plausible change quietly broke s
+… [truncated 3150 chars]
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\NEW-PROJECT-GUIDE.md","old_string":"Before every push: `git log --all --format='%ae %ce'` must show only no-reply addresses (or `claude[bot]`).","new_string":"**What you review yourself (step 7).** Tools support your review but do not replace it. Your checkpoints: `SPEC.md` before any code, the test names and the red failure me
+… [truncated 988 chars]
+
+> **Tool:** Edit {"replace_all":false,"file_path":"c:\\Repositories\\SampleApp\\course\\SYLLABUS.md","old_string":"- Findings are marked Important (a bug to fix before merge)","new_string":"- You are still the reviewer. Tools support your review, they do not replace it. Review `SPEC.md` before code, the test names and the red failure message, the PR diff (title, spec change, tests, then the changed code), the depl
+… [truncated 204 chars]
+
+> Result:
+```
+## main...origin/main
+Switched to a new branch 'docs/human-review-guidance'
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\PLAYBOOK.md has been updated successfully.
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\PLAYBOOK.md has been updated successfully.
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\NEW-PROJECT-GUIDE.md has been updated successfully.
+```
+
+> Result:
+```
+The file c:\Repositories\SampleApp\course\SYLLABUS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+```
+
+> **Tool:** Bash {"command":"git diff --stat && git diff | grep -c '^-[^-]' ; src=\"$(cygpath -w \"$HOME/.claude/projects/c--Repositories-SampleApp\")\" && node course/export-transcripts.mjs \"$src\" course/transcripts >/dev/null 2>&1; git status --short; echo \"--- leak check ---\"; grep -rIl -E \"hotmail\\.com|izolotarev@(hotmail|gmail)|Users[\\\\/]+Igor\" course/ || echo \"no emails or profile paths found\"","d
+… [truncated 74 chars]

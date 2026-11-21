@@ -328,9 +328,72 @@ You don't need to learn how to write test code or terms like mocks and fixtures.
 
 **Where it fits:** `spec, red, green, guard check, commit, reviewer (spec check), /code-review, fix what is real, PR, CI, merge, deploy`. Use `low` for small changes and `high` for risky code. Skip it for docs-only PRs. Triage: fix Important, skip Nits, note Pre-existing.
 
+**Which tool for which job:**
+
+| Situation | Use |
+|---|---|
+| A feature with a spec | The `reviewer` agent first (it checks requirements and says what is fine), then `/code-review` |
+| Any other code change | `/code-review low`, or `high` for risky code |
+| Audit of an area you did not change | `/code-review <path>`; expect some speculative findings |
+| You want fixes applied | Commit, `/code-review low --fix`, then check `git diff` and `npm test` |
+| You want comments on a PR | `--comment`, only when a PR exists and others should see it |
+
+Skip it for docs-only PRs, tiny edits and half-written code. Run it once per PR, not after every commit. Type the level, because the last one you typed is remembered.
+
 **Turn a finding into a test.** The reviewer's suggestion is the regression test for this bug: add `'c'`, `'a'`, `'b'` and expect that order back. It goes red against the planted query.
 
 **Not covered:** an explicit `main...branch` target (output not recorded), a PR-number target, `--comment`, `ultra`, and the managed GitHub Code Review service.
+
+## Where you review as a human
+
+Tests, `/code-review` and the `reviewer` agent support your review. They do not replace it. They cannot tell whether the feature is the right one, how it feels to use, or whether a plausible change quietly broke something nobody tested.
+
+**Your checkpoints, in order:**
+
+| When | Where | What you check |
+|---|---|---|
+| Before any code | `SPEC.md` | Is the behavior what you want? Everything else is checked against it, so this review is worth the most |
+| Red step | Test names and the failure message | Do the names match what you asked for? Does the failure say something sensible (`expected 404 to be 200`), not a typo? |
+| After the change | The PR, "Files changed" tab | The diff, read in the order below |
+| Before merging | The PR's checks | The required `test` check is green |
+| Deploy | The Actions approval screen | Is it the commit you expect, and is it safe to ship? |
+| After the deploy | The live site | Does the feature work in a browser? |
+
+The PR diff is the only checkpoint where you read code.
+
+**Reading order for a PR diff** (do not start at the top of the file list):
+
+1. The PR title and description. A vague title for a behavior change is a warning sign: the planted bug was committed as "Tidy GET /api/todos query".
+2. The `SPEC.md` change, if any.
+3. The tests. Several rows? Out-of-order cases? Would they go red if the code broke? A weak test is a bigger risk than odd-looking code.
+4. The production code, only what changed.
+5. Anything outside the feature: unrelated edits, reformatting noise (`git diff --stat`), new dependencies, config changes.
+
+**Read closely when the change touches:**
+
+- Data that is deleted, overwritten or stored (`DELETE` routes, any `WHERE`). A wrong condition is silent data loss.
+- Validation and limits (the 200-character rule, id parsing).
+- Workflows and deploy files (`.github/workflows/*`, the Render hook, the smoke test). Tests do not cover them: the `client/distt` typo passed every test.
+- Permissions and hooks (`.claude/settings.json`, deny rules, the Stop and Prettier hooks). A loosened rule is easy to miss.
+- Secrets: no token or `.env` content in the diff.
+- `CLAUDE.md` and other instruction files. They shape every later session.
+- Dependencies: new packages in `package.json`, and why.
+
+**Skim, don't dwell, on:** docs-only changes, mechanical test additions once the failure message made sense and the suite is green, and formatting (Prettier handles it).
+
+**Questions to ask while reading:**
+
+- Does this do only what the PR says?
+- What happens with an empty list, a huge value, a missing id, or two requests at once?
+- Could it delete or expose something it should not?
+- Would I notice if it broke? Is there a test or smoke check that would?
+- If it is wrong in production, how do I undo it? (Here: a revert PR.)
+
+**Keep it manageable:**
+
+- Keep PRs small: one behavior per PR, as with the API and the button. A diff you can read in five minutes gets read properly.
+- If part of a diff is unclear, ask `explain what this change does and what could go wrong`, then check the answer against the code.
+- Scale the care to the stakes. For a toy app, read data-touching code and workflows closely and skim the rest. For real users or money, review more carefully or get a second person.
 
 ## Todo app stack (reuse as a template)
 
