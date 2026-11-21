@@ -335,6 +335,18 @@ Every merge to `main` starts a deploy run that waits for approval, even docs-onl
 9. `git fetch --prune` to clean stale remote branches.
 10. At the end of a piece of work, update your notes (`PLAYBOOK.md`, `PROGRESS.md`) and re-export transcripts if you keep them.
 
+**What you review yourself (step 7).** Tools support your review but do not replace it. Your checkpoints: `SPEC.md` before any code, the test names and the red failure message, the PR diff, the deploy approval, and the live site afterwards.
+
+Read the PR diff in this order, not from the top of the file list:
+
+1. PR title and description. A vague title on a behavior change is a warning sign.
+2. The `SPEC.md` change.
+3. The tests: several rows, out-of-order cases, would they go red if the code broke?
+4. The production code that changed.
+5. Anything outside the feature: unrelated edits, formatting noise, new dependencies, config changes.
+
+Read closely when the change touches data that is deleted or stored, validation, workflows and deploy files (tests do not cover them), permissions and hooks, secrets, `CLAUDE.md`, or dependencies. Skim docs-only changes and mechanical test additions. Keep PRs small enough to read in about five minutes, and if something is unclear ask `explain what this change does and what could go wrong`.
+
 Before every push: `git log --all --format='%ae %ce'` must show only no-reply addresses (or `claude[bot]`).
 
 ## Phase 11: Cost and unattended-run checklist

@@ -176,6 +176,7 @@ You build one app (a todo web app, Node + Express + Vitest) and ship it through 
 - `--comment` posts the findings on a GitHub PR as inline comments. `ultra` runs a deeper cloud review and needs a claude.ai login.
 - You can type it, and Claude can also start it when you ask for a review in plain words. To stop that, set `"skillOverrides": {"code-review": "user-invocable-only"}`.
 - It runs in your session and counts toward your usage. The managed Code Review service on GitHub is a different product: an Owner turns it on, it reads `REVIEW.md`, and it is billed separately through usage credits.
+- You are still the reviewer. Tools support your review, they do not replace it. Review `SPEC.md` before code, the test names and the red failure message, the PR diff (title, spec change, tests, then the changed code), the deploy approval, and the live site. Read closely anything that deletes or stores data, workflows, hooks and permissions, secrets and `CLAUDE.md`.
 - Findings are marked Important (a bug to fix before merge), Nit (minor, optional) or Pre-existing (not caused by this change). Say "skip style" in your own review prompts, or a reviewer will always find something.
 
 ## After the course
