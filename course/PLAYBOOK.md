@@ -143,7 +143,7 @@ Copy this file into any new project. Updated after each lesson. Lessons done: 1,
 1. Create `.claude/agents/reviewer.md`: frontmatter `name`, `description`, `tools: Read, Grep, Glob`, then a one-line instruction: `Compare the changed files to the spec. Report only gaps that affect correctness. Skip style.` Commit it so the team shares it.
 2. `have the reviewer check the app against @SPEC.md`. The report came back with file:line references and no edits.
 3. Turn the review's weak spots into work: it noted PATCH tests used one row. Add a test with several rows and gapped ids, plant the bug (patch by list position) to see the test **fail**, revert, see it pass.
-4. `/code-review` on the branch diff. You type it; Claude can't launch it. It found no bugs and two low-severity test-diagnostic notes.
+4. `/code-review` on the branch diff. You can type it, and Claude can also start it when you ask for a review in plain words. It found no bugs and two low-severity test-diagnostic notes.
 
 **Facts and gotchas:**
 
@@ -295,6 +295,42 @@ The Stop hook blocks a red turn, so unless you switch it off briefly, red and gr
 You don't need to learn how to write test code or terms like mocks and fixtures. Keep one habit: send the first prompt above, read the output, then `Now write the smallest code that passes, and run the full suite.` If a task feels too big to describe, split it. A feature you can state in a few sentences is one you can check, with or without testing skills.
 
 **Avoid:** tests and code in the same breath with no test run in between (a test can pass without ever being red); treating green as correct; testing trivia such as whether `setError('')` is called. Test what a user or caller can see.
+
+## Review with /code-review (extra, after the course)
+
+**Goal:** get an independent bug hunt on a diff, and know when to use it instead of the `reviewer` agent.
+
+**What we did:** on a practice branch (`fix/review-practice`, never pushed) I planted one bug. `GET /api/todos` ordered by `text COLLATE NOCASE` instead of `id`, so todos came back alphabetically, against the spec's "oldest first". All 48 tests stayed green, because the "oldest first" test adds only `'a'` then `'b'`, which is alphabetical and insertion order at once. I committed it with a neutral message ("Tidy GET /api/todos query") so the message gave no hint.
+
+**What each tool did:**
+
+| Run | Findings | Found the bug | Notes |
+|---|---|---|---|
+| `/code-review` (no level), twice | 5, then 4 | Yes, both | Cited `SPEC.md` lines; the second run named the weak test |
+| `/code-review low`, twice | 1 each | Yes, both | Short and on target. Said "SPEC.md was not checked" and still caught it from the code |
+| `/code-review high` | 5 | Yes | Added tie order, ASCII-only `NOCASE`, missing test, sort cost |
+| `/code-review client/src` (path target) | 10 | n/a | Reviewed existing code the branch never touched |
+| `reviewer` agent | 1 bug plus the test gap | Yes | Cited the spec, explained why the tests missed it, and confirmed the other requirements were fine |
+
+**Facts and gotchas:**
+
+- **You can type it, and Claude can start it** when you ask for a review in plain words. Earlier notes said it couldn't; that was too absolute.
+- **Runs differ.** The same command gave 5 findings, then 4, with different wording. Treat it as a second opinion, not a checklist.
+- **Deeper is not always better.** `low` gave the main bug with no noise. `high` added a few real points (the weak test, tie order) and several minor ones.
+- **Some findings are wrong, and a wrong one can repeat.** Every deeper run read "ordering" in the spec's out-of-scope list as forbidding the sort. That line most likely means custom reordering. If a false finding keeps coming back, check whether the spec wording is ambiguous.
+- **The level is remembered.** If you type no level, it reuses the last `low` to `max` you typed, even in a later session, and prints "Reusing high effort". Type the level you want.
+- **A path target reviews the code as it is, not the diff.** `client/src` returned 10 findings on files this branch never touched, several speculative. Use a path for an audit of one area, not for reviewing a PR.
+- **It can read `SPEC.md`.** The docs say it reads `CLAUDE.md`, but it can open repo files, and our `CLAUDE.md` names `SPEC.md` as the source of truth. At `low` it did not check the spec. For a spec check, use the `reviewer`.
+- **The `reviewer` can't run `git`.** Tell it which files changed, not what the bug is, so it has to find the gap by comparing with the spec.
+- **`--fix` edits sit outside `/rewind` checkpoints.** Commit first, check `git diff`, and undo with git. In our practice run the branch was clean afterwards, so no `--fix` edits were observed.
+- **It is advice, not a gate.** Tests, the required `test` check, branch protection and your merge approval stay the gates.
+- **It uses your session's usage.** Run it once per PR, not after every edit.
+
+**Where it fits:** `spec, red, green, guard check, commit, reviewer (spec check), /code-review, fix what is real, PR, CI, merge, deploy`. Use `low` for small changes and `high` for risky code. Skip it for docs-only PRs. Triage: fix Important, skip Nits, note Pre-existing.
+
+**Turn a finding into a test.** The reviewer's suggestion is the regression test for this bug: add `'c'`, `'a'`, `'b'` and expect that order back. It goes red against the planted query.
+
+**Not covered:** an explicit `main...branch` target (output not recorded), a PR-number target, `--comment`, `ultra`, and the managed GitHub Code Review service.
 
 ## Todo app stack (reuse as a template)
 

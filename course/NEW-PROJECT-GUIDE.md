@@ -124,7 +124,7 @@ tools: Read, Grep, Glob
 ---
 Compare the changed files to the spec. Report only gaps that affect correctness. Skip style.
 ```
-Read-only tools mean it cannot edit anything. Agent files load at session start: restart the session after creating one. Use it with `have the reviewer check the app against @SPEC.md`. You can also type `/code-review` on a branch diff (Claude cannot launch it for you).
+Read-only tools mean it cannot edit anything. Agent files load at session start: restart the session after creating one. Use it with `have the reviewer check the app against @SPEC.md`. You can also type `/code-review` on a committed branch (Claude can start it too if you ask for a review in plain words).
 
 ## Phase 6: GitHub setup
 
@@ -327,7 +327,7 @@ Every merge to `main` starts a deploy run that waits for approval, even docs-onl
 1. `git checkout main && git pull`, then `git checkout -b feat/<short-name>`.
 2. Update `SPEC.md` first if behavior, API or limits change.
 3. **[claude]** **Red:** write the tests only (several rows, gapped and out-of-order ids), run them, and show the failure. **Green:** write the smallest code that passes and run `npm test`. **Guard check:** break the code on purpose, see a test go red, restore. A hook runs Prettier on each edit, which can reformat unrelated lines in files that aren't Prettier-formatted (use a script for those files and check `git diff --stat`). The Stop hook blocks finishing while `npm test` fails, so red and green happen in one turn.
-4. Ask the `reviewer` agent to check the diff against `SPEC.md`. Treat its "not checked" lines as follow-ups.
+4. Ask the `reviewer` agent to check the diff against `SPEC.md`. Treat its "not checked" lines as follow-ups. Then commit and run `/code-review` once (`low` for a small change, `high` for risky code such as data, auth or deploy; skip it for docs-only PRs). Fix what is real, skip nits, and turn a real finding into a test. It is advice, not a gate: tests, CI and your own merge decision stay the gates.
 5. Check in the running app if the UI or API changed.
 6. Commit (end the message with Claude's co-author line if you use it), push, `gh pr create` using the template.
 7. CI `test` goes green. Read the diff yourself. Merge with rebase and delete the branch.
